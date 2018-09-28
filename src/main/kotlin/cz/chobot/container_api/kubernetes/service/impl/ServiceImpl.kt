@@ -1,21 +1,44 @@
 package cz.chobot.container_api.kubernetes.service.impl
 
-import cz.chobot.container_api.bo.user.User
-import cz.chobot.container_api.bo.userApplication.Application
+import cz.chobot.container_api.bo.Module
+import cz.chobot.container_api.bo.Network
+import cz.chobot.container_api.bo.User
 import cz.chobot.container_api.kubernetes.service.Iservice
 import io.kubernetes.client.ApiException
 import io.kubernetes.client.apis.CoreV1Api
 import io.kubernetes.client.custom.IntOrString
 import io.kubernetes.client.models.*
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 import java.util.*
 
+
+//service name z usera a site a pripadne i modulu
+@Service
 class ServiceImpl : Iservice {
 
     private val logger = LoggerFactory.getLogger(ServiceImpl::class.java)
 
-    public fun createService(api: CoreV1Api, namespace: V1Namespace, user: User, application: Application): V1Service? {
-        val serviceName = user.login + "-" + application.name
+    override fun createService(api: CoreV1Api, namespace: V1Namespace, user: User, network: Network): V1Service? {
+        val serviceName = "${user.login}-${network.name}"
+        val newService = V1Service()
+        newService.apiVersion = "v1"
+        newService.kind = "Service"
+        newService.metadata = createServiceMetadata(serviceName)
+        newService.spec = createServiceSpec(serviceName, 80, "http-" + serviceName, "http-api")
+        try {
+            val service = api.createNamespacedService(namespace.metadata.name, newService, "true")
+            logger.info("Service {} created", newService.metadata.name)
+            return service
+        } catch (exception: ApiException) {
+            logger.error(exception.responseBody)
+        }
+
+        return newService
+    }
+
+    override fun createService(api: CoreV1Api, namespace: V1Namespace, user: User, module: Module): V1Service? {
+        val serviceName = "${user.login}-${module.name}-${module.actualVersion.name}"
         val newService = V1Service()
         newService.apiVersion = "v1"
         newService.kind = "Service"
@@ -33,7 +56,6 @@ class ServiceImpl : Iservice {
     }
 
 
-//    nahradim qot tim o co se jedna -- napriklad preproces-modul a -m id uzivatele
 
 
     private fun createServiceSpec(selectorApp: String, servicePort: Int, servicePortName: String, targetPort: String): V1ServiceSpec {
