@@ -5,6 +5,7 @@ import cz.chobot.container_api.repository.NetworkRepository
 import cz.chobot.container_api.repository.UserRepository
 import cz.chobot.container_api.service.INetworkService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
@@ -24,18 +25,65 @@ class NetworkController {
     @Autowired
     private lateinit var userRepository: UserRepository
 
+    @GetMapping
+    fun getAllByUser(@PathVariable("idUser") idUser: Long): ResponseEntity<Set<Network>> {
+        val user = userRepository.findById(idUser)
+        if (user.isPresent) {
+            val networks = networkRepository.findAllByUserId(idUser)
+            return ResponseEntity<Set<Network>>(networks, null, HttpStatus.OK)
+        }
+        return ResponseEntity.notFound().build()
+    }
+
+    @GetMapping("/{idNetwork}")
+    fun getNetworkDetail(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long): ResponseEntity<Network> {
+        val user = userRepository.findById(idUser)
+        if (user.isPresent) {
+            val network = networkRepository.findByIdAndUserId(idNetwork, idUser)
+            if (network.isPresent) {
+                return ResponseEntity<Network>(network.get(), null, HttpStatus.OK)
+            }
+            return ResponseEntity.notFound().build()
+        }
+        return ResponseEntity.notFound().build()
+    }
+
+    @GetMapping("/{idNetwork}/logs")
+    fun getNetworkLogs(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long): ResponseEntity<String> {
+        val user = userRepository.findById(idUser)
+        if (user.isPresent) {
+            val network = networkRepository.findByIdAndUserId(idNetwork, idUser)
+            if (network.isPresent) {
+                val logs = networkService.getNetworkLogs(network.get(), user.get())
+                return ResponseEntity(logs, null, HttpStatus.OK)
+            }
+            return ResponseEntity.notFound().build()
+        }
+        return ResponseEntity.notFound().build()
+    }
+
+    @GetMapping("/{idNetwork}/healtz")
+    fun getHealtz(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long): ResponseEntity<String> {
+        val user = userRepository.findById(idUser)
+        if (user.isPresent) {
+            val network = networkRepository.findByIdAndUserId(idNetwork, idUser)
+            if (network.isPresent) {
+                network.get().connectionUri
+            }
+            return ResponseEntity.notFound().build()
+        }
+        return ResponseEntity.notFound().build()
+    }
+
+
     @PostMapping
-    fun create(@PathVariable("idUser") idUser: Long, @Valid @RequestBody network: Network): ResponseEntity<Void> {
+    fun create(@PathVariable("idUser") idUser: Long, @Valid @RequestBody network: Network): ResponseEntity<Network> {
 
         val user = userRepository.findById(idUser)
 
         if (user.isPresent) {
             val newNetwork = networkService.createNetwork(network, user.get())
-            val location = ServletUriComponentsBuilder.fromCurrentRequest()
-                    .path("/{id}")
-                    .buildAndExpand(newNetwork.id)
-                    .toUri()
-            return ResponseEntity.created(location).build()
+            return ResponseEntity(newNetwork, HttpStatus.CREATED)
         }
         return ResponseEntity.notFound().build()
     }
@@ -64,12 +112,12 @@ class NetworkController {
 
 
     @PutMapping("/{idNetwork}")
-    fun deploy(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long): ResponseEntity<Void> {
+    fun deploy(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long): ResponseEntity<Network> {
         val network = networkRepository.findById(idNetwork)
         val user = userRepository.findById(idUser)
         if (network.isPresent && user.isPresent) {
             val deployedNetwork = networkService.deploy(network.get(), user.get())
-            return ResponseEntity.ok().build()
+            return ResponseEntity(deployedNetwork, HttpStatus.OK)
         }
         return ResponseEntity.notFound().build()
     }
