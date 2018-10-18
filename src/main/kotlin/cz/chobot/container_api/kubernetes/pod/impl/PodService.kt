@@ -12,6 +12,7 @@ import kotlin.collections.HashMap
 class PodService : IPodService {
     private val logger = LoggerFactory.getLogger(PodService::class.java)
 
+
     override fun createPod(api: CoreV1Api, namespace: V1Namespace): V1Pod? {
         try {
             val pod = createPod(namespace)
@@ -38,7 +39,7 @@ class PodService : IPodService {
         return null
     }
 
-    fun createReplicationController(api: CoreV1Api, namespace: V1Namespace): V1ReplicationController{
+    fun createReplicationController(api: CoreV1Api, namespace: V1Namespace): V1ReplicationController {
         val controller = V1ReplicationController()
         controller.kind = "ReplicationController"
 
@@ -55,7 +56,7 @@ class PodService : IPodService {
 
         val templateMeta = V1ObjectMeta()
         templateMeta.labels = HashMap()
-        templateMeta.labels["app"] ="mock-user-app"
+        templateMeta.labels["app"] = "mock-user-app"
         template.metadata = templateMeta
 
 
@@ -69,7 +70,7 @@ class PodService : IPodService {
         templateSpecContainer.ports = Arrays.asList(port)
 
 
-        val templateSpecContainerLivenesProbe =  V1Probe()
+        val templateSpecContainerLivenesProbe = V1Probe()
 
 
         val httpGetAction = V1HTTPGetAction()
@@ -101,7 +102,7 @@ class PodService : IPodService {
     override fun findPod(api: CoreV1Api, namespace: V1Namespace, podName: String): V1Pod? {
         try {
             return api.readNamespacedPod(podName, namespace.metadata?.name, "true", true, false)
-        }catch (exception: ApiException){
+        } catch (exception: ApiException) {
             logger.error("Error occurred while creating pod. Error is: {}", exception.responseBody)
         }
 
@@ -137,7 +138,6 @@ class PodService : IPodService {
     }
 
 
-
     private fun createPodMetadata(namespace: V1Namespace): V1ObjectMeta {
         val metadata = V1ObjectMeta()
         metadata.name = "mock-user-pod"
@@ -160,10 +160,10 @@ class PodService : IPodService {
         return metadata
     }
 
-    private fun createServiceSpec(): V1ServiceSpec{
+    private fun createServiceSpec(): V1ServiceSpec {
         val spec = V1ServiceSpec()
         spec.type = "NodePort"
-        spec.selector =HashMap()
+        spec.selector = HashMap()
         spec.selector["app"] = "mock-user-app"
 
         val port = V1ServicePort()
@@ -211,9 +211,9 @@ class PodService : IPodService {
 
             val status = api.deleteNamespacedPod(pod.metadata.name, pod.metadata.namespace, body, "true", gracePeriodSeconds, null, propagationPolicy)
             logger.error("Pod deleted with status: {}.", status)
-        }catch (exception: ApiException){
+        } catch (exception: ApiException) {
             logger.error("Error occurred while deleting pod {}. Error is", pod.metadata.name, exception.responseBody)
-        }catch (exception: Exception){
+        } catch (exception: Exception) {
             logger.error("Error occurred while deleting pod {}. Error is", pod.metadata.name, exception.message)
         }
 
@@ -229,8 +229,8 @@ class PodService : IPodService {
 
     }
 
-    override fun listServices(api: CoreV1Api){
-        var list = api.listServiceForAllNamespaces(null,null,null,null,null,null,null,null,null)
+    override fun listServices(api: CoreV1Api) {
+        var list = api.listServiceForAllNamespaces(null, null, null, null, null, null, null, null, null)
         println("All services info BEGIN")
         for (item in list.items) {
             println(item.metadata.name)
