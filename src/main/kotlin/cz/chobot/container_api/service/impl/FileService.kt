@@ -57,7 +57,7 @@ class FileService : IFileService {
     }
 
     private fun createUserPath(network: Network, user: User): String {
-        return "${user.login}/${network.name}"
+        return "${user.login}-${network.name}"
     }
 
 }
