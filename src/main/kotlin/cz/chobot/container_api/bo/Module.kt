@@ -49,12 +49,17 @@ Module(
         @Column(name = "repo_url")
         var repositoryUrl: String,
 
-        @JsonIgnore
         @NotNull
         @Column(name = "connection_uri")
         var connectionUri: String,
 
-        @JsonIgnore
+        @NotNull
+        @Column(name = "connection_uri_internal")
+        var connectionUriInternal: String,
+
+        @Column(name = "api_key")
+        var apiKey: String,
+
         @NotNull
         @Column(name = "connection_port")
         var connectionPort: Int,
@@ -63,7 +68,6 @@ Module(
         @Column(name = "docker_registry")
         var dockerRegistry: String,
 
-        @JsonIgnore
         @Column(name = "docker_image_id")
         var imageId: String,
 
