@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import javax.persistence.*
 import javax.validation.constraints.NotNull
 import javax.validation.constraints.Size
+import java.awt.print.Book
+
+
 
 
 @Entity
@@ -19,6 +22,7 @@ data class User(
         @Column(unique = true, name = "login")
         var login: String,
 
+        @JsonIgnore
         @NotNull
         @Size(max = 32)
         @Column(name = "password")
@@ -63,4 +67,5 @@ data class User(
                 return "$id - $login"
         }
 }
+
 

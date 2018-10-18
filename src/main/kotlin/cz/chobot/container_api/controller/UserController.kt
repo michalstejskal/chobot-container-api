@@ -19,7 +19,7 @@ class UserController {
 
     @GetMapping("/{idUser}")
     fun getUser(@PathVariable idUser: Long): ResponseEntity<User> {
-        return userRepository.findById(idUser).map { user ->
+        return userService.findUser(idUser).map { user ->
             ResponseEntity.ok(user)
         }.orElse(ResponseEntity.notFound().build())
     }
