@@ -56,8 +56,6 @@ class ServiceImpl : Iservice {
     }
 
 
-
-
     private fun createServiceSpec(selectorApp: String, servicePort: Int, servicePortName: String, targetPort: String): V1ServiceSpec {
         val spec = V1ServiceSpec()
         spec.selector = HashMap()
@@ -86,7 +84,8 @@ class ServiceImpl : Iservice {
                 "kind:  Mapping\n" +
                 "name:  " + mappingName + "\n" +
                 "prefix: " + urlPrefix + "\n" +
-                "service: " + serviceToRun + "\n")
+                "service: " + serviceToRun + "\n" +
+                "timeout_ms: " + 30000)
 
         return annotations
     }

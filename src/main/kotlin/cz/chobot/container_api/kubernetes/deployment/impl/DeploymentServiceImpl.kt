@@ -15,21 +15,39 @@ import kotlin.collections.HashMap
 
 @Service
 class DeploymentServiceImpl : IDeploymentService {
-    override fun createDeploymentForService(api: ExtensionsV1beta1Api, namespace: V1Namespace, user: User, network: Network): ExtensionsV1beta1Deployment? {
-        val deploymentName = user.login + "-" + network.name
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun createDeploymentForService(api: ExtensionsV1beta1Api, namespace: V1Namespace, user: User, network: Network): String {
+        val deploymentName = "${user.login}-${network.name}"
+        val newDeployment = ExtensionsV1beta1Deployment()
+        newDeployment.apiVersion = "extensions/v1beta1"
+        newDeployment.kind = "Deployment"
+
+        newDeployment.metadata = createDeploymentMetadata(deploymentName)
+        newDeployment.spec = createDeploymentSpec(deploymentName, network.type.imageId, 5000)
+
+        try {
+            val deployment = api.createNamespacedDeployment(namespace.metadata.name, newDeployment, "true")
+            logger.info("Deployment {} created.", newDeployment.metadata.name)
+            return deploymentName
+
+
+        } catch (exception: ApiException) {
+            logger.info("Error occurred while creating deployment {}. Error is: {}", newDeployment.metadata.name, exception.responseBody)
+        }
+
+        return ""
+
     }
 
     private val logger = LoggerFactory.getLogger(DeploymentServiceImpl::class.java)
 
-    override fun createDeploymentForService(api: ExtensionsV1beta1Api, namespace: V1Namespace, user: User, module: Module): String{
+    override fun createDeploymentForService(api: ExtensionsV1beta1Api, namespace: V1Namespace, user: User, module: Module): String {
         val deploymentName = "${user.login}-${module.name}-${module.actualVersion.name}"
         val newDeployment = ExtensionsV1beta1Deployment()
         newDeployment.apiVersion = "extensions/v1beta1"
         newDeployment.kind = "Deployment"
 
         newDeployment.metadata = createDeploymentMetadata(deploymentName)
-        newDeployment.spec = createDeploymentSpec(deploymentName, module)
+        newDeployment.spec = createDeploymentSpec(deploymentName, module.imageId, module.connectionPort)
 
         try {
             val deployment = api.createNamespacedDeployment(namespace.metadata.name, newDeployment, "true")
@@ -44,80 +62,57 @@ class DeploymentServiceImpl : IDeploymentService {
         return ""
     }
 
-    private fun createDeploymentMetadata(deploymentName: String): V1ObjectMeta{
+    private fun createDeploymentMetadata(deploymentName: String): V1ObjectMeta {
         val meta = V1ObjectMeta()
         meta.name = deploymentName
         return meta
     }
 
-    private fun createDeploymentSpec(deploymentName: String, module: Module): ExtensionsV1beta1DeploymentSpec{
+    private fun createDeploymentSpec(deploymentName: String, imageId: String, connectionPort: Int): ExtensionsV1beta1DeploymentSpec {
         val spec = ExtensionsV1beta1DeploymentSpec()
         spec.replicas = 1
         spec.strategy = ExtensionsV1beta1DeploymentStrategy()
         spec.strategy.type = "RollingUpdate"
-        spec.template = createDeploymentTemplate(deploymentName, module)
+        spec.template = createDeploymentTemplate(deploymentName, imageId, connectionPort)
 
         return spec
     }
 
-    private fun createDeploymentTemplate(deploymentName: String, module: Module): V1PodTemplateSpec{
+    private fun createDeploymentTemplate(deploymentName: String, imageId: String, connectionPort: Int): V1PodTemplateSpec {
         val template = V1PodTemplateSpec()
         template.metadata = V1ObjectMeta()
         template.metadata.labels = HashMap()
         template.metadata.labels["app"] = deploymentName
 
         template.spec = V1PodSpec()
-        template.spec.containers = createTemplateContainers(deploymentName, module)
+        template.spec.containers = createTemplateContainers(deploymentName, imageId, connectionPort)
         return template
     }
 
 
-//    vemu sit a udelam deploy nad ni a i nad modulama
-    private fun createTemplateContainers(deploymentName: String, module: Module): List<V1Container>{
+    //    vemu sit a udelam deploy nad ni a i nad modulama
+    private fun createTemplateContainers(deploymentName: String, imageId: String, connectionPort: Int): List<V1Container> {
         val container = V1Container()
         container.name = deploymentName
-//        container.image = "datawire/qotm:1.1"
-//        container.image = "michal:1"
-//        container.image = module.imageId
-//        container.image = "localhost:5000/stejskys-handlebrouk-test"
-        container.image = module.imageId
+        container.image = imageId
 
         val port = V1ContainerPort()
         port.name = "http-api"
-        port.containerPort = module.connectionPort
+        port.containerPort = connectionPort
         container.ports = Arrays.asList(port)
 
         val env = V1EnvVar()
         env.name = "git_param"
-        env.value="nejake git repo"
+        env.value = "nejake git repo"
         container.env = Arrays.asList(env)
 
         val resource = V1ResourceRequirements()
         resource.limits = HashMap()
         resource.limits["cpu"] = Quantity("0.1")
-        resource.limits["memory"] = Quantity("100Mi")
+        resource.limits["memory"] = Quantity("1Gi")
+        resource.requests= HashMap()
+        resource.requests["memory"] = Quantity("1Gi")
         container.resources = resource
-
-
-
-
-//        val container1 = V1Container()
-//        container1.name = "preproces-module"
-//        container1.image = "michalsec:1"
-//
-//        val port1 = V1ContainerPort()
-//        port1.name = "http-api"
-//        port1.containerPort = 5001
-//        container1.ports = Arrays.asList(port1)
-//
-//        val resource1 = V1ResourceRequirements()
-//        resource1.limits = HashMap()
-//        resource1.limits["cpu"] = Quantity("0.1")
-//        resource1.limits["memory"] = Quantity("100Mi")
-//        container1.resources = resource1
-
-
-//        return Arrays.asList(container, container1)
         return Arrays.asList(container)
     }
 }
