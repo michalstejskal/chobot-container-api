@@ -29,8 +29,23 @@ class ModuleController {
     private lateinit var moduleRepository: ModuleRepository
 
 
+    @GetMapping()
+    fun getModules(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long): ResponseEntity<Set<Module>> {
+        val user = userRepository.findById(idUser)
+
+        if (user.isPresent) {
+            val network = networkRepository.findByIdAndUserId(idNetwork, idUser)
+            if (network.isPresent) {
+                val modules = moduleRepository.findAllByNetworkId(network.get().id)
+                return ResponseEntity<Set<Module>>(modules, null, HttpStatus.OK)
+            }
+        }
+        return ResponseEntity.notFound().build()
+    }
+
+
     @GetMapping("/{idModule}")
-    fun get(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long, @PathVariable("idModule") idModule: Long): ResponseEntity<Module> {
+    fun getModule(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long, @PathVariable("idModule") idModule: Long): ResponseEntity<Module> {
         val user = userRepository.findById(idUser)
         val module = moduleRepository.findById(idModule)
         val network = networkRepository.findById(idNetwork)
@@ -42,18 +57,29 @@ class ModuleController {
         return ResponseEntity.notFound().build()
     }
 
+
+    @GetMapping("/{idModule}/logs")
+    fun getNetworkLogs(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long, @PathVariable("idModule") idModule: Long): ResponseEntity<String> {
+        val user = userRepository.findById(idUser)
+        val module = moduleRepository.findById(idModule)
+        val network = networkRepository.findById(idNetwork)
+
+        if (module.isPresent && user.isPresent && network.isPresent) {
+            val logs = moduleService.getModuleLogs(module.get(),user.get())
+            return ResponseEntity(logs, null, HttpStatus.OK)
+        }
+        return ResponseEntity.notFound().build()
+    }
+
     @PostMapping
-    fun create(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long, @Valid @RequestBody module: Module): ResponseEntity<Void> {
+    fun create(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long, @Valid @RequestBody module: Module): ResponseEntity<Module> {
         val user = userRepository.findById(idUser)
         val network = networkRepository.findById(idNetwork)
 
         if (network.isPresent && user.isPresent) {
-            val newNetwork = moduleService.createModule(module, network.get(), user.get())
-            val location = ServletUriComponentsBuilder.fromCurrentRequest()
-                    .path("/{id}")
-                    .buildAndExpand(newNetwork.id)
-                    .toUri()
-            return ResponseEntity.created(location).build()
+            val newModule = moduleService.createModule(module, network.get(), user.get())
+            return ResponseEntity(newModule, HttpStatus.CREATED)
+
         }
         return ResponseEntity.notFound().build()
     }
@@ -70,7 +96,6 @@ class ModuleController {
         }
         return ResponseEntity.notFound().build()
     }
-
 
 
     @PutMapping("/{idModule}/deployment")
