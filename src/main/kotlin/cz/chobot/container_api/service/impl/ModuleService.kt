@@ -5,6 +5,7 @@ import cz.chobot.container_api.bo.ModuleVersion
 import cz.chobot.container_api.bo.Network
 import cz.chobot.container_api.bo.User
 import cz.chobot.container_api.enum.ModuleOperation
+import cz.chobot.container_api.enum.ModuleStatus
 import cz.chobot.container_api.enum.ModuleType
 import cz.chobot.container_api.exception.ControllerException
 import cz.chobot.container_api.exception.ImageBuilderException
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import javax.transaction.Transactional
 import java.net.URI
+import java.util.*
 
 @Service
 open class ModuleService : IModuleService {
@@ -38,19 +40,27 @@ open class ModuleService : IModuleService {
     private val imageBuildUri: String? = null
 
     override fun createModule(module: Module, network: Network, user: User): Module {
-        module.status = 0;
+        module.status = ModuleStatus.CREATED.code;
         return fillAndValidateModule(module, network, user, ModuleOperation.CREATE)
     }
 
     override fun updateModule(module: Module, network: Network, user: User): Module {
-        module.status = 0;
+        module.status = ModuleStatus.CREATED.code;
         return fillAndValidateModule(module, network, user, ModuleOperation.UPDATE)
     }
 
     override fun deploy(module: Module, network: Network, user: User): Module {
+        module.status = ModuleStatus.DEPLOYED.code
         val deployedModule = kubernetesService.deployModule(module, user)
         val savedModule = moduleRepository.save(deployedModule)
         return savedModule
+    }
+
+    override fun getModuleLogs(module: Module, user: User): String{
+        val logs =  kubernetesService.getPodLogs(module, user)
+        val encodedData = Base64.getEncoder().encode(logs.toByteArray())
+        val encdoded = String(encodedData, Charsets.UTF_8)
+        return "{\"value\":\"$encdoded\"}"
     }
 
     private fun createModuleVersion(module: Module): ModuleVersion {
@@ -112,7 +122,8 @@ open class ModuleService : IModuleService {
             apiKey += chars[Math.floor(Math.random() * chars.length).toInt()]
         }
 
-        return apiKey
+        val encodedData = Base64.getEncoder().encode(apiKey.toByteArray())
+        return encodedData.toString()
     }
 
     private fun createDockerImage(module: Module, network: Network, user: User, operation: ModuleOperation) {

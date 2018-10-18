@@ -9,4 +9,5 @@ interface IModuleService {
     fun createModule(module: Module, network: Network, user: User): Module
     fun updateModule(module: Module, network: Network, user: User):Module
     fun deploy(module: Module, network: Network, user: User): Module
+    fun getModuleLogs(module: Module, user: User): String
 }

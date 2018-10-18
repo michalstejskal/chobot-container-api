@@ -7,12 +7,12 @@ import cz.chobot.container_api.enum.NetworkStatus
 import cz.chobot.container_api.enum.NetworkTypeEnum
 import cz.chobot.container_api.exception.ControllerException
 import cz.chobot.container_api.kubernetes.IKubernetesService
-import cz.chobot.container_api.kubernetes.KubernetesService
 import cz.chobot.container_api.repository.NetworkParameterRepository
 import cz.chobot.container_api.repository.NetworkRepository
 import cz.chobot.container_api.repository.NetworkTypeRepository
 import cz.chobot.container_api.service.IFileService
 import cz.chobot.container_api.service.INetworkService
+import org.json.JSONObject
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -94,15 +94,26 @@ class NetworkService : INetworkService {
     }
 
     override fun deploy(network: Network, user: User): Network {
-        return kubernetesService.deployNetwork(network, user)
+        val deployedNetwork = kubernetesService.deployNetwork(network, user)
+        deployedNetwork.apiKeySecret = createApiKeySecret()
+        deployedNetwork.apiKey = createApiKey(network)
+        val savedNetwork = networkRepository.save(deployedNetwork)
+        return savedNetwork
     }
 
+
+    override fun getNetworkLogs(network: Network, user: User): String {
+        val logs = kubernetesService.getPodLogs(network, user)
+        val encodedData = Base64.getEncoder().encode(logs.toByteArray())
+        val encdoded = String(encodedData, Charsets.UTF_8)
+        return "{\"value\":\"$encdoded\"}"
+    }
 
     private fun validateAndSetUpNetwork(network: Network, user: User): Network {
         network.name = network.name.toLowerCase()
         network.user = user
         val regex = "._".toRegex()
-        if(regex.containsMatchIn(network.name)){
+        if (regex.containsMatchIn(network.name)) {
             throw ControllerException("ER009")
         }
 
@@ -121,8 +132,28 @@ class NetworkService : INetworkService {
         return network
     }
 
+    private fun createApiKeySecret(): String {
+        val chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        var apiKeyPwd = ""
+        for (i in 0..31) {
+            apiKeyPwd += chars[Math.floor(Math.random() * chars.length).toInt()]
+        }
+
+        val encodedApiKey = Base64.getEncoder().encode(apiKeyPwd.toByteArray())
+        return String(encodedApiKey, Charsets.UTF_8)
+    }
+
+    private fun createApiKey(network: Network): String {
+        val rootObject = JSONObject()
+        rootObject.put("network_id", network.id)
+        rootObject.put("api_key", network.apiKeySecret)
+
+        val encodedApiKey = Base64.getEncoder().encode(rootObject.toString().toByteArray())
+        return String(encodedApiKey, Charsets.UTF_8)
+    }
+
     private fun createConnectionUri(network: Network, user: User): String {
-        return "${user.login}/${network.name}"
+        return "${user.login}-${network.name}"
     }
 
 

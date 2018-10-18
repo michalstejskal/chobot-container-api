@@ -9,4 +9,5 @@ interface INetworkService {
     fun setTrainDataPath(file: MultipartFile, network: Network, user: User): Network
     fun setEncodedTrainData(encodedData: String, network: Network, user: User): Network
     fun deploy(network: Network, user: User): Network
+    fun getNetworkLogs(network: Network, user: User): String
 }
