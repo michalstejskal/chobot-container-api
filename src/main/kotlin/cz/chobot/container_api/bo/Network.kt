@@ -46,11 +46,12 @@ data class Network (
         @Column(name = "status", nullable = false)
         var status: Int,
 
-        @NotNull
-        @Column(name = "api_key", nullable = false)
+        @Column(name = "api_key_secret")
+        var apiKeySecret: String,
+
+        @Column(name = "api_key")
         var apiKey: String,
 
-        @JsonIgnore
         @Column(name = "connection_uri")
         var connectionUri: String,
 
