@@ -13,9 +13,10 @@ import cz.chobot.container_api.kubernetes.KubernetesService
 import cz.chobot.container_api.repository.ModuleRepository
 import cz.chobot.container_api.repository.ModuleVersionRepository
 import cz.chobot.container_api.service.IModuleService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpMethod
+import org.apache.logging.log4j.util.Strings
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
@@ -39,6 +40,8 @@ open class ModuleService : IModuleService {
     @Value("\${image.buider.uri}")
     private val imageBuildUri: String? = null
 
+    private val logger = LoggerFactory.getLogger(ModuleService::class.java)
+
     override fun createModule(module: Module, network: Network, user: User): Module {
         module.status = ModuleStatus.CREATED.code;
         return fillAndValidateModule(module, network, user, ModuleOperation.CREATE)
@@ -61,6 +64,16 @@ open class ModuleService : IModuleService {
         val encodedData = Base64.getEncoder().encode(logs.toByteArray())
         val encdoded = String(encodedData, Charsets.UTF_8)
         return "{\"value\":\"$encdoded\"}"
+    }
+
+    override fun undeployModule(module: Module, user: User): Module {
+        kubernetesService.undeployModule(module, user)
+        module.status = ModuleStatus.CREATED.code
+        module.apiKey = Strings.EMPTY
+        module.connectionUri = Strings.EMPTY
+        moduleRepository.save(module)
+        logger.info("Network state updated ${user.login}-${module.name}")
+        return module
     }
 
     private fun createModuleVersion(module: Module): ModuleVersion {

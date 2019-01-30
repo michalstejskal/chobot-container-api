@@ -10,4 +10,6 @@ interface IModuleService {
     fun updateModule(module: Module, network: Network, user: User):Module
     fun deploy(module: Module, network: Network, user: User): Module
     fun getModuleLogs(module: Module, user: User): String
+    fun undeployModule(module: Module, user: User): Module
+
 }

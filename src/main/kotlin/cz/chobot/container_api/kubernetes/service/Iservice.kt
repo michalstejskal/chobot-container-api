@@ -10,4 +10,5 @@ import io.kubernetes.client.models.V1Service
 interface Iservice {
     fun createService(api: CoreV1Api, namespace: V1Namespace, user: User, network: Network): V1Service?
     fun createService(api: CoreV1Api, namespace: V1Namespace, user: User, module: Module): V1Service?
+    fun deleteService(api: CoreV1Api, namespace: V1Namespace, serviceName: String)
 }

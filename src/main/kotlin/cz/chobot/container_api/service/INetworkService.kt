@@ -10,4 +10,6 @@ interface INetworkService {
     fun setEncodedTrainData(encodedData: String, network: Network, user: User): Network
     fun deploy(network: Network, user: User): Network
     fun getNetworkLogs(network: Network, user: User): String
+    fun undeploy(network: Network, user: User): Network
+    fun resetNetworkAttributes(network: Network): Network
 }

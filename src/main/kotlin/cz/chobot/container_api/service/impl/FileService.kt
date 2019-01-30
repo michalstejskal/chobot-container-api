@@ -2,6 +2,7 @@ package cz.chobot.container_api.service.impl
 
 import cz.chobot.container_api.bo.Network
 import cz.chobot.container_api.bo.User
+import cz.chobot.container_api.enum.NetworkTypeEnum
 import cz.chobot.container_api.exception.ControllerException
 import cz.chobot.container_api.service.IFileService
 import org.springframework.beans.factory.annotation.Value
@@ -35,17 +36,17 @@ class FileService : IFileService {
         if (!file.isEmpty) {
             File("$filePath/$userPath").mkdirs()
             file.inputStream.use { inputStream ->
-                Files.copy(inputStream, path.resolve("$userPath/train_data.zip"), StandardCopyOption.REPLACE_EXISTING)
+                Files.copy(inputStream, path.resolve("$userPath/${file.originalFilename}"), StandardCopyOption.REPLACE_EXISTING)
             }
 
-            if(!isZipFile("$filePath/$userPath/train_data.zip")){
-                throw ControllerException("ER006")
+            if(network.type.name != NetworkTypeEnum.CHATBOT.typeName && !isZipFile("$filePath/$userPath/${file.originalFilename}")){
+                throw ControllerException("ER006 -  ZIP FILE")
             }
         } else {
-            throw ControllerException("ER005")
+            throw ControllerException("ER005 - FILE IS EMPTY")
         }
 
-        return userPath
+        return "$filePath/$userPath/${file.originalFilename}"
     }
 
     private fun isZipFile(filePath: String): Boolean {

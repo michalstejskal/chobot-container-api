@@ -110,4 +110,17 @@ class ModuleController {
         }
         return ResponseEntity.notFound().build()
     }
+
+    @DeleteMapping("/{idModule}")
+    fun undeployModule(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long, @PathVariable("idModule") idModule: Long): ResponseEntity<Module> {
+        val user = userRepository.findById(idUser)
+        val module = moduleRepository.findById(idModule)
+        val network = networkRepository.findById(idNetwork)
+
+        if (module.isPresent && user.isPresent && network.isPresent) {
+            val updatedModule = moduleService.undeployModule(module.get(),user.get())
+            return ResponseEntity(updatedModule, null, HttpStatus.OK)
+        }
+        return ResponseEntity.notFound().build()
+    }
 }

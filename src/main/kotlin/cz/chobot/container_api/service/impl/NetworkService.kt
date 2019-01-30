@@ -12,15 +12,19 @@ import cz.chobot.container_api.repository.NetworkRepository
 import cz.chobot.container_api.repository.NetworkTypeRepository
 import cz.chobot.container_api.service.IFileService
 import cz.chobot.container_api.service.INetworkService
+import org.apache.logging.log4j.util.Strings
 import org.json.JSONObject
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.util.*
 
 
+
 @Service
-class NetworkService : INetworkService {
+open class NetworkService : INetworkService {
 
     @Autowired
     private lateinit var networkRepository: NetworkRepository
@@ -37,6 +41,8 @@ class NetworkService : INetworkService {
     @Autowired
     private lateinit var kubernetesService: IKubernetesService
 
+    private val logger = LoggerFactory.getLogger(NetworkService::class.java)
+
 
     override fun createNetwork(network: Network, user: User): Network {
         val validatedNetwork = validateAndSetUpNetwork(network, user)
@@ -44,28 +50,49 @@ class NetworkService : INetworkService {
     }
 
     override fun setTrainDataPath(file: MultipartFile, network: Network, user: User): Network {
-        if (network.type.name != NetworkTypeEnum.CHATBOT.typeName) {
-            val path = fileService.saveFileToPath(file, network, user)
-            val existingParameter = networkParameterRepository.findByNetworkAndAbbreviation(network, "TRAIN_DATA_PATH")
+        val path = fileService.saveFileToPath(file, network, user)
+        val existingParameter = networkParameterRepository.findByNetworkAndAbbreviation(network, "TRAIN_DATA_PATH")
 
-            if (existingParameter.isPresent && existingParameter.get().size != 0) {
-                val parameter = existingParameter.get()
-                parameter.forEach { param ->
-                    if (param.abbreviation.equals("TRAIN_DATA_PATH")) {
-                        param.value = path
-                        networkParameterRepository.save(param)
-                    }
+        if (existingParameter.isPresent && existingParameter.get().size != 0) {
+            val parameter = existingParameter.get()
+            parameter.forEach { param ->
+                if (param.abbreviation.equals("TRAIN_DATA_PATH")) {
+                    param.value = path
+                    networkParameterRepository.save(param)
                 }
-
-                return networkRepository.findById(network.id).get()
-            } else {
-                network.parameters = mutableSetOf(NetworkParameter(name = "TRAIN_DATA_PATH", abbreviation = "TRAIN_DATA_PATH", value = path, network = network))
-                networkRepository.save(network)
-                return network
             }
+
+            return networkRepository.findById(network.id).get()
         } else {
-            throw ControllerException("ER007")
+            network.parameters = mutableSetOf(NetworkParameter(name = "TRAIN_DATA_PATH", abbreviation = "TRAIN_DATA_PATH", value = path, network = network))
+            networkRepository.save(network)
+            return network
         }
+    }
+
+    override fun undeploy(network: Network, user: User): Network {
+        kubernetesService.undeployNetwork(network, user)
+        val updatedNetwork = resetNetworkAttributes(network)
+        logger.info("Network state updated ${user.login}-${updatedNetwork.name}")
+        return updatedNetwork
+    }
+
+    @Transactional
+    override fun resetNetworkAttributes(network: Network): Network {
+        network.status = NetworkStatus.CREATED.code
+        network.apiKeySecret = Strings.EMPTY
+        network.connectionUri = Strings.EMPTY
+        val params = network.parameters.filter { param -> param.abbreviation == "IS_TRAINED" }
+        if(params.isNotEmpty()) {
+            val isTrainedParam = params.first()
+            network.parameters.remove(isTrainedParam)
+            networkRepository.save(network)
+            networkParameterRepository.delete(isTrainedParam)
+        }else{
+            networkRepository.save(network)
+        }
+
+        return network
     }
 
     override fun setEncodedTrainData(encodedData: String, network: Network, user: User): Network {
@@ -101,7 +128,6 @@ class NetworkService : INetworkService {
         return savedNetwork
     }
 
-
     override fun getNetworkLogs(network: Network, user: User): String {
         val logs = kubernetesService.getPodLogs(network, user)
         val encodedData = Base64.getEncoder().encode(logs.toByteArray())
@@ -110,26 +136,31 @@ class NetworkService : INetworkService {
     }
 
     private fun validateAndSetUpNetwork(network: Network, user: User): Network {
-        network.name = network.name.toLowerCase()
+        network.name = createNetworkName(network)
         network.user = user
+
+        val type = networkTypeRepository.findById(network.type.id)
+        if (type.isPresent) {
+            network.type = type.get()
+            network.imageId = network.type.imageId
+        } else {
+            logger.error("unsupported type of network " + network.type.id)
+            throw ControllerException("ER001 - unsupported network type")
+        }
+
+        network.connectionUri = createConnectionUri(network, user)
+        network.status = NetworkStatus.CREATED.code
+        logger.info("network setted")
+        return network
+    }
+
+    private fun createNetworkName(network: Network): String {
         val regex = "._".toRegex()
         if (regex.containsMatchIn(network.name)) {
             throw ControllerException("ER009")
         }
 
-        val type = networkTypeRepository.findById(network.type.id)
-
-        if (type.isPresent) {
-            network.type = type.get()
-            network.imageId = network.type.imageId
-        } else {
-            throw ControllerException("ER001")
-        }
-
-        network.user = user
-        network.connectionUri = createConnectionUri(network, user)
-        network.status = NetworkStatus.CREATED.code
-        return network
+        return network.name.toLowerCase()
     }
 
     private fun createApiKeySecret(): String {

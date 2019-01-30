@@ -16,7 +16,7 @@ class PodService : IPodService {
     override fun createPod(api: CoreV1Api, namespace: V1Namespace): V1Pod? {
         try {
             val pod = createPod(namespace)
-            val namespacedPod: V1Pod = api.createNamespacedPod(pod.metadata.namespace, pod, "true")
+            val namespacedPod: V1Pod = api.createNamespacedPod(pod.metadata.namespace, pod, true, "true", "true")
             logger.info("Pod successfully created.")
             return namespacedPod
         } catch (exception: ApiException) {
@@ -29,7 +29,7 @@ class PodService : IPodService {
     override fun createService(api: CoreV1Api, namespace: V1Namespace): V1Service? {
         try {
             val service = createService(namespace)
-            val namespacedService: V1Service = api.createNamespacedService(service.metadata.namespace, service, "true")
+            val namespacedService: V1Service = api.createNamespacedService(service.metadata.namespace, service, true, "true", "true")
             logger.info("Service successfully created.")
             return namespacedService
         } catch (exception: ApiException) {
@@ -93,7 +93,7 @@ class PodService : IPodService {
         controller.spec = spec
 
 
-        val newController = api.createNamespacedReplicationController(namespace.metadata.name, controller, "true")
+        val newController = api.createNamespacedReplicationController(namespace.metadata.name, controller, true, "true", "true")
         return newController
 
     }
@@ -205,11 +205,9 @@ class PodService : IPodService {
         try {
             logger.info("Deleting pod {} in namespace {}.", pod.metadata.name, namespace.metadata.name)
             val body = V1DeleteOptions() // V1DeleteOptions
-            val gracePeriodSeconds = 0 // Integer | The duration in seconds before the object should be deleted. Value must be non-negative integer. The value zero indicates delete immediately. If this value is nil, the default grace period for the specified type will be used. Defaults to a per object value if not specified. zero means delete immediately.
-            val orphanDependents = true
-            val propagationPolicy = "Orphan" // String | Whether and how garbage collection will be performed. Either this field or OrphanDependents may be set, but not both. The default policy is decided by the existing finalizer set in the metadata.finalizers and the resource-specific default policy. Acceptable values are: 'Orphan' - orphan the dependents; 'Background' - allow the garbage collector to delete the dependents in the background; 'Foreground' - a cascading policy that deletes all dependents in the foreground.
+            val gracePeriodSeconds = "0" // Integer | The duration in seconds before the object should be deleted. Value must be non-negative integer. The value zero indicates delete immediately. If this value is nil, the default grace period for the specified type will be used. Defaults to a per object value if not specified. zero means delete immediately.
 
-            val status = api.deleteNamespacedPod(pod.metadata.name, pod.metadata.namespace, body, "true", gracePeriodSeconds, null, propagationPolicy)
+            val status = api.deleteNamespacedPod(pod.metadata.name, pod.metadata.namespace, body, "true", gracePeriodSeconds, null, true, "true")
             logger.error("Pod deleted with status: {}.", status)
         } catch (exception: ApiException) {
             logger.error("Error occurred while deleting pod {}. Error is", pod.metadata.name, exception.responseBody)

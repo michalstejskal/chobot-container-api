@@ -24,6 +24,9 @@ import io.kubernetes.client.PodLogs
 import io.kubernetes.client.models.V1Pod
 import jdk.nashorn.internal.runtime.ScriptingFunctions.readLine
 import java.io.BufferedReader
+import io.kubernetes.client.models.V1DeleteOptions
+
+
 
 
 @Service
@@ -76,6 +79,24 @@ class KubernetesService : IKubernetesService {
         return module
     }
 
+
+    override fun undeployNetwork(network: Network, user: User) {
+        val api = getKubernetesApi()
+        val namespace = namespaceService.getOrCreateNamespace(api, "default")
+        service.deleteService(api, namespace, "${user.login}-${network.name}")
+        logger.info("Service for ${user.login}-${network.name} deleted")
+        deploymentService.deleteDeployment(ExtensionsV1beta1Api(), namespace, "${user.login}-${network.name}")
+        logger.info("Deployment for ${user.login}-${network.name} deleted")
+    }
+
+    override fun undeployModule(module: Module, user: User) {
+        val api = getKubernetesApi()
+        val namespace = namespaceService.getOrCreateNamespace(api, "default")
+        service.deleteService(api, namespace, "${user.login}-${module.name}-${module.actualVersion.name}")
+        logger.info("Service for ${user.login}-${module.name}-${module.actualVersion.name} deleted")
+        deploymentService.deleteDeployment(ExtensionsV1beta1Api(), namespace, "${user.login}-${module.name}-${module.actualVersion.name}")
+        logger.info("Deployment for ${user.login}-${module.name}-${module.actualVersion.name} deleted")
+    }
 
     private fun getKubernetesApi(): CoreV1Api {
         val client = Config.defaultClient()

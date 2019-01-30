@@ -27,7 +27,7 @@ class ServiceImpl : Iservice {
         newService.metadata = createServiceMetadata(serviceName)
         newService.spec = createServiceSpec(serviceName, 80, "http-" + serviceName, "http-api")
         try {
-            val service = api.createNamespacedService(namespace.metadata.name, newService, "true")
+            val service = api.createNamespacedService(namespace.metadata.name, newService, true, "true","true")
             logger.info("Service {} created", newService.metadata.name)
             return service
         } catch (exception: ApiException) {
@@ -45,7 +45,7 @@ class ServiceImpl : Iservice {
         newService.metadata = createServiceMetadata(serviceName)
         newService.spec = createServiceSpec(serviceName, 80, "http-" + serviceName, "http-api")
         try {
-            val service = api.createNamespacedService(namespace.metadata.name, newService, "true")
+            val service = api.createNamespacedService(namespace.metadata.name, newService, true, "true","true")
             logger.info("Service {} created", newService.metadata.name)
             return service
         } catch (exception: ApiException) {
@@ -55,11 +55,17 @@ class ServiceImpl : Iservice {
         return newService
     }
 
+    override fun deleteService(api: CoreV1Api, namespace: V1Namespace, serviceName: String) {
+        val body = V1DeleteOptions()
+        api.deleteNamespacedService(serviceName, namespace.metadata.name, body, "true", "true", 15, true, "true")
+    }
+
 
     private fun createServiceSpec(selectorApp: String, servicePort: Int, servicePortName: String, targetPort: String): V1ServiceSpec {
         val spec = V1ServiceSpec()
         spec.selector = HashMap()
         spec.selector["app"] = selectorApp
+        spec.selector["id"] = selectorApp
 
         val port = V1ServicePort()
         port.port = servicePort

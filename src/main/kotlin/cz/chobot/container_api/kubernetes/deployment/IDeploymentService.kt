@@ -10,4 +10,5 @@ import io.kubernetes.client.models.V1Namespace
 interface IDeploymentService {
      fun createDeploymentForService(api: ExtensionsV1beta1Api, namespace: V1Namespace, user: User, network: Network): String
      fun createDeploymentForService(api: ExtensionsV1beta1Api, namespace: V1Namespace, user: User, module: Module): String
+     fun deleteDeployment(api: ExtensionsV1beta1Api, namespace: V1Namespace, deploymentName: String)
 }

@@ -9,4 +9,6 @@ interface IKubernetesService{
     fun deployModule(module: Module, user: User): Module
     fun getPodLogs(network: Network, user: User): String
     fun getPodLogs(module: Module, user: User): String
+    fun undeployNetwork(network: Network, user: User)
+    fun undeployModule(module: Module, user: User)
 }

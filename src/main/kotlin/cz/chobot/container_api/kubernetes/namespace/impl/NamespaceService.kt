@@ -16,7 +16,7 @@ class NamespaceService : INamespaceService {
     private val logger = LoggerFactory.getLogger(NamespaceService::class.java)
 
     override fun getAllNamespaces(api: CoreV1Api): V1NamespaceList? {
-        return api.listNamespace("true", null, null, null, null, null, null, null, null)
+        return api.listNamespace(true, null, null, null, null, null, null, null, null)
 
     }
 
@@ -36,7 +36,7 @@ class NamespaceService : INamespaceService {
             val namespaceBody = V1Namespace()
             namespaceBody.metadata = metadata
 
-            val namespace: V1Namespace = api.createNamespace(namespaceBody, "true")
+            val namespace: V1Namespace = api.createNamespace(namespaceBody, true, "true", "true")
             logger.info("Namespace {} created.", name)
             return namespace
         } catch (exception: ApiException) {
