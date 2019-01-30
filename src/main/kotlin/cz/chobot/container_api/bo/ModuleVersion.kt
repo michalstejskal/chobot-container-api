@@ -26,7 +26,8 @@ data class ModuleVersion(
         var commitId: String? = null,
 
         @JsonIgnore
-        @ManyToOne(cascade = [CascadeType.REMOVE])
+//        @ManyToOne(cascade = [CascadeType.REFRESH])
+        @ManyToOne()
         @JoinColumn(name = "module_id")
         var module: Module
 

@@ -22,7 +22,8 @@ data class NetworkParameter(
         var name: String,
 
         @JsonIgnore
-        @ManyToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+        @ManyToOne(fetch = FetchType.LAZY)
+//        @ManyToOne(cascade = [CascadeType.REFRESH], fetch = FetchType.LAZY)
         @JoinColumn(name = "network_id")
         var network: Network? = null,
 
@@ -34,22 +35,22 @@ data class NetworkParameter(
         @NotNull
         @Column(name = "value", nullable = false)
         var value: String
-){
-        override fun hashCode(): Int {
-                if(id == null){
-                        return 0
-                }
-                return id.hashCode()
+) {
+    override fun hashCode(): Int {
+        if (id == null) {
+            return 0
         }
+        return id.hashCode()
+    }
 
-        override fun equals(other: Any?): Boolean {
-                if (this === other) return true
-                if (other == null || javaClass != other.javaClass) return false
-                val that = other as NetworkParameter?
-                return id == that?.id && abbreviation == that?.abbreviation
-        }
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val that = other as NetworkParameter?
+        return id == that?.id && abbreviation == that?.abbreviation
+    }
 
-        override fun toString(): String {
-                return "$id - $name"
-        }
+    override fun toString(): String {
+        return "$id - $name"
+    }
 }

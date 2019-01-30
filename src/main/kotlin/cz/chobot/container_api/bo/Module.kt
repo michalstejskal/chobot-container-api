@@ -76,7 +76,8 @@ Module(
 
 
         @JsonIgnore
-        @ManyToOne(cascade = [CascadeType.ALL])
+        @ManyToOne()
+//        @ManyToOne(cascade = [CascadeType.REFRESH])
         @JoinColumn(name = "network_id")
         var network: Network
 ) {

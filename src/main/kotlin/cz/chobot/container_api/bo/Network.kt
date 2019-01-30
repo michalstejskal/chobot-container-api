@@ -8,7 +8,7 @@ import javax.validation.constraints.Size
 
 @Entity
 @Table(name = "network")
-data class Network (
+data class Network(
         @NotNull
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -59,7 +59,7 @@ data class Network (
         @Column(name = "docker_registry")
         var dockerRegistry: String,
 
-        @OneToMany(fetch = FetchType.EAGER, mappedBy = "network", cascade = [CascadeType.REMOVE])
+        @OneToMany(fetch = FetchType.EAGER, mappedBy = "network", cascade = [CascadeType.ALL])
         var modules: MutableSet<Module>,
 
         @JsonIgnore
@@ -67,24 +67,25 @@ data class Network (
         var parameters: MutableSet<NetworkParameter>,
 
         @JsonIgnore
-        @ManyToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+        @ManyToOne(fetch = FetchType.LAZY)
+//        @ManyToOne(cascade = [CascadeType.REFRESH], fetch = FetchType.LAZY)
         @JoinColumn(name = "user_id")
         var user: User
 ) {
     override fun hashCode(): Int {
-            return id.hashCode()
+        return id.hashCode()
     }
 
-        override fun equals(other: Any?): Boolean {
-                if (this === other) return true
-                if (other == null || javaClass != other.javaClass) return false
-                val that = other as Network?
-                return id == that?.id && name == that?.name
-        }
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val that = other as Network?
+        return id == that?.id && name == that?.name
+    }
 
-        override fun toString(): String {
-                return "$id - $name"
-        }
+    override fun toString(): String {
+        return "$id - $name"
+    }
 }
 
 
