@@ -140,10 +140,15 @@ class DeploymentServiceImpl : IDeploymentService {
         port.containerPort = connectionPort
         container.ports = Arrays.asList(port)
 
-        val env = V1EnvVar()
-        env.name = "NETWORK_ID"
-        env.value = networkId
-        container.env = Arrays.asList(env)
+        val networkIdEnv = V1EnvVar()
+        networkIdEnv.name = "NETWORK_ID"
+        networkIdEnv.value = networkId
+
+        val environmentEnv = V1EnvVar()
+        environmentEnv.name = "ENVIRONMENT"
+        environmentEnv.value = "PRODUCTION"
+
+        container.env = Arrays.asList(environmentEnv, networkIdEnv)
 
 
         if (train_data_path.isNotEmpty()) {

@@ -38,10 +38,6 @@ class FileService : IFileService {
             file.inputStream.use { inputStream ->
                 Files.copy(inputStream, path.resolve("$userPath/${file.originalFilename}"), StandardCopyOption.REPLACE_EXISTING)
             }
-
-            if(network.type.name != NetworkTypeEnum.CHATBOT.typeName && !isZipFile("$filePath/$userPath/${file.originalFilename}")){
-                throw ControllerException("ER006 -  ZIP FILE")
-            }
         } else {
             throw ControllerException("ER005 - FILE IS EMPTY")
         }

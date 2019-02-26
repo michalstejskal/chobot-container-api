@@ -1,7 +1,7 @@
 package cz.chobot.container_api.controller
 
-import cz.chobot.container_api.ContainerApiApplication
 import cz.chobot.container_api.bo.Network
+import cz.chobot.container_api.bo.NetworkParameter
 import cz.chobot.container_api.repository.NetworkRepository
 import cz.chobot.container_api.repository.UserRepository
 import cz.chobot.container_api.service.INetworkService
@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 import javax.validation.Valid
 
 @RestController
@@ -132,12 +131,12 @@ class NetworkController {
         return ResponseEntity.notFound().build()
     }
 
-    @PostMapping("/{idNetwork}/encodedTrainData")
-    fun setEncodedTrainData(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long, @RequestBody encodedData: String): ResponseEntity<Void> {
+    @PostMapping("/{idNetwork}/parameter")
+    fun setNetworkParameter(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long, @RequestBody networkParam: NetworkParameter): ResponseEntity<Void> {
         val network = networkRepository.findById(idNetwork)
         val user = userRepository.findById(idUser)
         if (network.isPresent && user.isPresent) {
-            networkService.setEncodedTrainData(encodedData, network.get(), user.get())
+            networkService.setNetworkParameter(networkParam, network.get(), user.get())
             return ResponseEntity.ok().build()
         }
         return ResponseEntity.notFound().build()

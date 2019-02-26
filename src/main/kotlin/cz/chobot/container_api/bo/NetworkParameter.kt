@@ -33,6 +33,7 @@ data class NetworkParameter(
         var abbreviation: String,
 
         @NotNull
+        @Size(max = 1024)
         @Column(name = "value", nullable = false)
         var value: String
 ) {

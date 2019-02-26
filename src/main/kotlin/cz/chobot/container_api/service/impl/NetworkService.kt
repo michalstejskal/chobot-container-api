@@ -83,41 +83,38 @@ open class NetworkService : INetworkService {
         network.apiKeySecret = Strings.EMPTY
         network.connectionUri = Strings.EMPTY
         val params = network.parameters.filter { param -> param.abbreviation == "IS_TRAINED" }
-        if(params.isNotEmpty()) {
+        if (params.isNotEmpty()) {
             val isTrainedParam = params.first()
             network.parameters.remove(isTrainedParam)
             networkRepository.save(network)
             networkParameterRepository.delete(isTrainedParam)
-        }else{
+        } else {
             networkRepository.save(network)
         }
 
         return network
     }
 
-    override fun setEncodedTrainData(encodedData: String, network: Network, user: User): Network {
-        if (network.type.name == NetworkTypeEnum.CHATBOT.typeName) {
-            val existingParameter = networkParameterRepository.findByNetworkAndAbbreviation(network, "DECODED_TRAIN_DATA")
-            val decodedData = String(Base64.getDecoder().decode(encodedData))
+    override fun setNetworkParameter(networkParam: NetworkParameter, network: Network, user: User): Network {
+        val existingParameter = networkParameterRepository.findByNetworkAndAbbreviation(network, networkParam.abbreviation)
 
-            if (existingParameter.isPresent && existingParameter.get().size != 0) {
-                val parameter = existingParameter.get()
-                parameter.forEach { param ->
-                    if (param.abbreviation.equals("DECODED_TRAIN_DATA")) {
-                        param.value = decodedData
-                        networkParameterRepository.save(param)
-                    }
+        if (existingParameter.isPresent && existingParameter.get().size != 0) {
+            val parameter = existingParameter.get()
+            parameter.forEach { param ->
+                if (param.abbreviation.equals(networkParam.abbreviation)) {
+                    param.value = networkParam.value
+                    networkParameterRepository.save(param)
                 }
-
-                return networkRepository.findById(network.id).get()
-            } else {
-                network.parameters = mutableSetOf(NetworkParameter(name = "DECODED_TRAIN_DATA", abbreviation = "DECODED_TRAIN_DATA", value = decodedData, network = network))
-                networkRepository.save(network)
-                return network
             }
+
+            return networkRepository.findById(network.id).get()
         } else {
-            throw ControllerException("ER007")
+            networkParam.network = network
+            network.parameters = mutableSetOf(networkParam)
+            networkRepository.save(network)
+            return network
         }
+
     }
 
     override fun deploy(network: Network, user: User): Network {
