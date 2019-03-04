@@ -138,7 +138,12 @@ class DeploymentServiceImpl : IDeploymentService {
         val port = V1ContainerPort()
         port.name = "http-api"
         port.containerPort = connectionPort
-        container.ports = Arrays.asList(port)
+
+
+        val portSwagger = V1ContainerPort()
+        portSwagger.name = "api-swagger"
+        portSwagger.containerPort = 8080
+        container.ports = Arrays.asList(port, portSwagger)
 
         val networkIdEnv = V1EnvVar()
         networkIdEnv.name = "NETWORK_ID"
@@ -148,7 +153,11 @@ class DeploymentServiceImpl : IDeploymentService {
         environmentEnv.name = "ENVIRONMENT"
         environmentEnv.value = "PRODUCTION"
 
-        container.env = Arrays.asList(environmentEnv, networkIdEnv)
+        val uriEnv = V1EnvVar()
+        uriEnv.name = "API_URI"
+        uriEnv.value = "/${deploymentName}/"
+
+        container.env = Arrays.asList(environmentEnv, networkIdEnv, uriEnv)
 
 
         if (train_data_path.isNotEmpty()) {

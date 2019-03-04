@@ -24,7 +24,7 @@ class CORSFilter : Filter {
         response.setHeader("Access-Control-Max-Age", "3600")
         response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With, remember-me")
 
-        chain.doFilter(req, res)
+        chain.doFilter(request, response)
     }
 
     override fun init(filterConfig: FilterConfig) {}

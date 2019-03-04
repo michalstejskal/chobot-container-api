@@ -3,6 +3,7 @@ package cz.chobot.container_api.controller
 import cz.chobot.container_api.bo.User
 import cz.chobot.container_api.repository.UserRepository
 import cz.chobot.container_api.service.IUserService
+import io.jsonwebtoken.Jwts
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -17,6 +18,9 @@ class UserController {
     @Autowired
     private lateinit var userService: IUserService
 
+    val SECRET = "SecretKeyToGenJWTsSecretKeyToGenJWTs"
+    val TOKEN_PREFIX = "Bearer "
+
     @GetMapping("/{idUser}")
     fun getUser(@PathVariable idUser: Long): ResponseEntity<User> {
         return userService.findUser(idUser).map { user ->
@@ -24,7 +28,18 @@ class UserController {
         }.orElse(ResponseEntity.notFound().build())
     }
 
-    @PostMapping
+    @GetMapping("/me")
+    fun getLoggedUser(@RequestHeader("Authorization") authorization: String): ResponseEntity<User> {
+        val claims = Jwts.parser()
+                .setSigningKey(SECRET.toByteArray())
+                .parseClaimsJws(authorization.replace(TOKEN_PREFIX, "")).getBody()
+
+        return userRepository.findByLogin(claims.subject).map { user ->
+            ResponseEntity.ok(user)
+        }.orElse(ResponseEntity.notFound().build())
+    }
+
+    @PostMapping()
     fun createUser(@RequestBody user: User): ResponseEntity<Void> {
         val newUser = userService.createUser(user)
         val location = ServletUriComponentsBuilder.fromCurrentRequest()

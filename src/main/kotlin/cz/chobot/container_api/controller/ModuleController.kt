@@ -59,7 +59,7 @@ class ModuleController {
 
 
     @GetMapping("/{idModule}/logs")
-    fun getNetworkLogs(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long, @PathVariable("idModule") idModule: Long): ResponseEntity<String> {
+    fun getModuleLogs(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long, @PathVariable("idModule") idModule: Long): ResponseEntity<String> {
         val user = userRepository.findById(idUser)
         val module = moduleRepository.findById(idModule)
         val network = networkRepository.findById(idNetwork)

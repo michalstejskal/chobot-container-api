@@ -10,6 +10,7 @@ import io.kubernetes.client.custom.IntOrString
 import io.kubernetes.client.models.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.lang.Exception
 import java.util.*
 
 
@@ -32,6 +33,9 @@ class ServiceImpl : Iservice {
             return service
         } catch (exception: ApiException) {
             logger.error(exception.responseBody)
+        }catch (exception: Exception){
+            logger.info("Error occurred while creating service {}. Error is: {}", serviceName, exception.message)
+            exception.printStackTrace()
         }
 
         return newService

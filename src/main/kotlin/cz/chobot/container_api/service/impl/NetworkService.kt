@@ -4,7 +4,6 @@ import cz.chobot.container_api.bo.Network
 import cz.chobot.container_api.bo.NetworkParameter
 import cz.chobot.container_api.bo.User
 import cz.chobot.container_api.enum.NetworkStatus
-import cz.chobot.container_api.enum.NetworkTypeEnum
 import cz.chobot.container_api.exception.ControllerException
 import cz.chobot.container_api.kubernetes.IKubernetesService
 import cz.chobot.container_api.repository.NetworkParameterRepository
@@ -12,15 +11,17 @@ import cz.chobot.container_api.repository.NetworkRepository
 import cz.chobot.container_api.repository.NetworkTypeRepository
 import cz.chobot.container_api.service.IFileService
 import cz.chobot.container_api.service.INetworkService
+import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.SignatureAlgorithm
+import io.jsonwebtoken.security.Keys
 import org.apache.logging.log4j.util.Strings
-import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.util.*
-
+import javax.crypto.SecretKey
 
 
 @Service
@@ -80,8 +81,6 @@ open class NetworkService : INetworkService {
     @Transactional
     override fun resetNetworkAttributes(network: Network): Network {
         network.status = NetworkStatus.CREATED.code
-        network.apiKeySecret = Strings.EMPTY
-        network.connectionUri = Strings.EMPTY
         val params = network.parameters.filter { param -> param.abbreviation == "IS_TRAINED" }
         if (params.isNotEmpty()) {
             val isTrainedParam = params.first()
@@ -119,8 +118,6 @@ open class NetworkService : INetworkService {
 
     override fun deploy(network: Network, user: User): Network {
         val deployedNetwork = kubernetesService.deployNetwork(network, user)
-        deployedNetwork.apiKeySecret = createApiKeySecret()
-        deployedNetwork.apiKey = createApiKey(network)
         val savedNetwork = networkRepository.save(deployedNetwork)
         return savedNetwork
     }
@@ -135,6 +132,10 @@ open class NetworkService : INetworkService {
     private fun validateAndSetUpNetwork(network: Network, user: User): Network {
         network.name = createNetworkName(network)
         network.user = user
+
+        val key = createKeySecret()
+        network.apiKeySecret = Base64.getEncoder().encodeToString(key.getEncoded())
+        network.apiKey = createApiKey(user, network, key)
 
         val type = networkTypeRepository.findById(network.type.id)
         if (type.isPresent) {
@@ -160,24 +161,20 @@ open class NetworkService : INetworkService {
         return network.name.toLowerCase()
     }
 
-    private fun createApiKeySecret(): String {
-        val chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        var apiKeyPwd = ""
-        for (i in 0..31) {
-            apiKeyPwd += chars[Math.floor(Math.random() * chars.length).toInt()]
-        }
 
-        val encodedApiKey = Base64.getEncoder().encode(apiKeyPwd.toByteArray())
-        return String(encodedApiKey, Charsets.UTF_8)
+    private fun createKeySecret(): SecretKey {
+        return Keys.secretKeyFor(SignatureAlgorithm.HS256)
     }
 
-    private fun createApiKey(network: Network): String {
-        val rootObject = JSONObject()
-        rootObject.put("network_id", network.id)
-        rootObject.put("api_key", network.apiKeySecret)
+    private fun createApiKey(user: User, network: Network, key: SecretKey): String {
 
-        val encodedApiKey = Base64.getEncoder().encode(rootObject.toString().toByteArray())
-        return String(encodedApiKey, Charsets.UTF_8)
+        return Jwts.builder()
+                .setSubject("${user.login}-${network.name}")
+                .claim("scope", "run")
+                .claim("name", network.name)
+                .setIssuedAt(Date())
+                .signWith(key)
+                .compact()
     }
 
     private fun createConnectionUri(network: Network, user: User): String {
