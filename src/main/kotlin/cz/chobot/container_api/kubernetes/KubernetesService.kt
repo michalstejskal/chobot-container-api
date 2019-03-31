@@ -6,27 +6,14 @@ import cz.chobot.container_api.bo.User
 import cz.chobot.container_api.kubernetes.deployment.IDeploymentService
 import cz.chobot.container_api.kubernetes.namespace.INamespaceService
 import cz.chobot.container_api.kubernetes.service.impl.ServiceImpl
-import io.kubernetes.client.ApiException
 import io.kubernetes.client.Configuration
 import io.kubernetes.client.apis.CoreV1Api
 import io.kubernetes.client.apis.ExtensionsV1beta1Api
-import io.kubernetes.client.models.V1LabelSelector
 import io.kubernetes.client.util.Config
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
-import io.kubernetes.client.ApiClient
-import java.io.IOException
-import com.google.common.io.ByteStreams
-import io.kubernetes.client.PodLogs
-import io.kubernetes.client.models.V1Pod
-import jdk.nashorn.internal.runtime.ScriptingFunctions.readLine
-import java.io.BufferedReader
-import io.kubernetes.client.models.V1DeleteOptions
-
-
 
 
 @Service
@@ -48,7 +35,7 @@ class KubernetesService : IKubernetesService {
     @Value("\${ambasador.service.url.internal}")
     private val ambasadorServiceUrlInternal: String? = null
 
-    override fun getPodLogs(module: Module, user: User):String {
+    override fun getPodLogs(module: Module, user: User): String {
         val label = "${user.login}-${module.name}-${module.actualVersion.name}"
         return getPodLogs(label)
     }
@@ -105,9 +92,9 @@ class KubernetesService : IKubernetesService {
         return api
     }
 
-//    return only some logs
+    //    return only some logs
 //    all in elastic search
-    private fun getPodLogs(label: String): String{
+    private fun getPodLogs(label: String): String {
         val api = getKubernetesApi()
         val namespace = namespaceService.getOrCreateNamespace(api, "default")
         try {
