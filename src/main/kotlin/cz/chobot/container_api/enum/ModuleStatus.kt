@@ -1,5 +1,8 @@
 package cz.chobot.container_api.enum
 
+/***
+ * Status of module
+ */
 enum class ModuleStatus(val code: Int){
     CREATED(1),
     DEPLOYED(4),

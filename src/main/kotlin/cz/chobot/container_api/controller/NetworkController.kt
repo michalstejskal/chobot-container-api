@@ -28,48 +28,38 @@ class NetworkController {
 
     private val logger = LoggerFactory.getLogger(NetworkController::class.java)
 
-//    @GetMapping("/delete/{idNetwork}")
-//    fun fooo(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long): ResponseEntity<Network> {
-//        val network = networkRepository.findById(idNetwork)
-//        val user = userRepository.findById(idUser)
-//        if (network.isPresent && user.isPresent) {
-//            val updatedNetwork = networkService.undeploy(network.get(), user.get())
-//            return ResponseEntity(updatedNetwork, HttpStatus.OK)
-//        }
-//        return ResponseEntity.notFound().build()
-//    }
 
     @GetMapping
     fun getAllByUser(@PathVariable("idUser") idUser: Long): ResponseEntity<Set<Network>> {
-        logger.info("get all networks for user " + idUser)
+        logger.info("get all networks for user $idUser")
         val user = userRepository.findById(idUser)
         if (user.isPresent) {
             val networks = networkRepository.findAllByUserIdOrderByNameAsc(idUser)
             return ResponseEntity(networks, null, HttpStatus.OK)
         }
-        logger.info("no networks found for user " + idUser)
+        logger.info("no networks found for user $idUser")
         return ResponseEntity.notFound().build()
     }
 
     @GetMapping("/{idNetwork}")
     fun getNetworkDetail(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long): ResponseEntity<Network> {
-        logger.info("get specific network " + idNetwork + " for user " + idUser)
+        logger.info("get specific network $idNetwork for user $idUser")
         val user = userRepository.findById(idUser)
         if (user.isPresent) {
             val network = networkRepository.findByIdAndUserId(idNetwork, idUser)
             if (network.isPresent) {
                 return ResponseEntity(network.get(), null, HttpStatus.OK)
             }
-            logger.info("network not found" + idNetwork)
+            logger.info("network not found$idNetwork")
             return ResponseEntity.notFound().build()
         }
-        logger.info("user not found " + idUser)
+        logger.info("user not found $idUser")
         return ResponseEntity.notFound().build()
     }
 
     @GetMapping("/{idNetwork}/logs")
     fun getNetworkLogs(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long): ResponseEntity<String> {
-        logger.info("get logs of specific network " + idNetwork + " for user " + idUser)
+        logger.info("get logs of specific network $idNetwork for user $idUser")
         val user = userRepository.findById(idUser)
         if (user.isPresent) {
             val network = networkRepository.findByIdAndUserId(idNetwork, idUser)
@@ -77,40 +67,40 @@ class NetworkController {
                 val logs = networkService.getNetworkLogs(network.get(), user.get())
                 return ResponseEntity(logs, null, HttpStatus.OK)
             }
-            logger.info("network not found" + idNetwork)
+            logger.info("network not found$idNetwork")
             return ResponseEntity.notFound().build()
         }
-        logger.info("user not found " + idUser)
+        logger.info("user not found $idUser")
         return ResponseEntity.notFound().build()
     }
 
     @GetMapping("/{idNetwork}/healtz")
     fun getNetworkHealth(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long): ResponseEntity<String> {
-        logger.info("get health of specific network " + idNetwork + " for user " + idUser)
+        logger.info("get health of specific network $idNetwork for user $idUser")
         val user = userRepository.findById(idUser)
         if (user.isPresent) {
             val network = networkRepository.findByIdAndUserId(idNetwork, idUser)
             if (network.isPresent) {
                 network.get().connectionUri
             }
-            logger.info("network not found" + idNetwork)
+            logger.info("network not found$idNetwork")
             return ResponseEntity.notFound().build()
         }
-        logger.info("user not found " + idUser)
+        logger.info("user not found $idUser")
         return ResponseEntity.notFound().build()
     }
 
 
     @PostMapping
     fun createNetwork(@PathVariable("idUser") idUser: Long, @Valid @RequestBody network: Network): ResponseEntity<Network> {
-        logger.info("create new network for user " + idUser)
+        logger.info("create new network for user $idUser")
         val user = userRepository.findById(idUser)
 
         if (user.isPresent) {
             val newNetwork = networkService.createNetwork(network, user.get())
             return ResponseEntity(newNetwork, HttpStatus.CREATED)
         }
-        logger.info("User not found " + idUser)
+        logger.info("User not found $idUser")
         return ResponseEntity.notFound().build()
     }
 

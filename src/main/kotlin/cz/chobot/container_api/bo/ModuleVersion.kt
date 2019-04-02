@@ -26,28 +26,27 @@ data class ModuleVersion(
         var commitId: String? = null,
 
         @JsonIgnore
-//        @ManyToOne(cascade = [CascadeType.REFRESH])
         @ManyToOne()
         @JoinColumn(name = "module_id")
         var module: Module
 
-){
-        override fun hashCode(): Int {
-                if(id == null){
-                        return 0
-                }
-                return id.hashCode()
+) {
+    override fun hashCode(): Int {
+        if (id == null) {
+            return 0
         }
+        return id.hashCode()
+    }
 
-        override fun equals(other: Any?): Boolean {
-                if (this === other) return true
-                if (other == null || javaClass != other.javaClass) return false
-                val that = other as ModuleVersion?
-                return id == that?.id && name == that?.name
-        }
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val that = other as ModuleVersion?
+        return id == that?.id && name == that?.name
+    }
 
-        override fun toString(): String {
-                return "$id - $name"
-        }
+    override fun toString(): String {
+        return "$id - $name"
+    }
 
 }

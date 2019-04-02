@@ -14,7 +14,6 @@ import cz.chobot.container_api.service.INetworkService
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys
-import org.apache.logging.log4j.util.Strings
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -45,11 +44,17 @@ open class NetworkService : INetworkService {
     private val logger = LoggerFactory.getLogger(NetworkService::class.java)
 
 
+    /***
+     * Create and validate new network
+     */
     override fun createNetwork(network: Network, user: User): Network {
         val validatedNetwork = validateAndSetUpNetwork(network, user)
         return networkRepository.save(validatedNetwork)
     }
 
+    /***
+     * Set training data to specified path and set this path to database
+     */
     override fun setTrainDataPath(file: MultipartFile, network: Network, user: User): Network {
         val path = fileService.saveFileToPath(file, network, user)
         val existingParameter = networkParameterRepository.findByNetworkAndAbbreviation(network, "TRAIN_DATA_PATH")
@@ -57,7 +62,7 @@ open class NetworkService : INetworkService {
         if (existingParameter.isPresent && existingParameter.get().size != 0) {
             val parameter = existingParameter.get()
             parameter.forEach { param ->
-                if (param.abbreviation.equals("TRAIN_DATA_PATH")) {
+                if (param.abbreviation == "TRAIN_DATA_PATH") {
                     param.value = path
                     networkParameterRepository.save(param)
                 }
@@ -71,6 +76,9 @@ open class NetworkService : INetworkService {
         }
     }
 
+    /***
+     * undeploy -- delete deployement and service from kube cluster
+     */
     override fun undeploy(network: Network, user: User): Network {
         kubernetesService.undeployNetwork(network, user)
         val updatedNetwork = resetNetworkAttributes(network)
@@ -78,6 +86,10 @@ open class NetworkService : INetworkService {
         return updatedNetwork
     }
 
+
+    /***
+     * reset network parameter to default value eg. param if network is trained -- during undeploy is network Pod deleted so network is not trained
+     */
     @Transactional
     override fun resetNetworkAttributes(network: Network): Network {
         network.status = NetworkStatus.CREATED.code
@@ -94,13 +106,17 @@ open class NetworkService : INetworkService {
         return network
     }
 
+
+    /***
+     * add new parameter like pygrok pattern
+     */
     override fun setNetworkParameter(networkParam: NetworkParameter, network: Network, user: User): Network {
         val existingParameter = networkParameterRepository.findByNetworkAndAbbreviation(network, networkParam.abbreviation)
 
-        if (existingParameter.isPresent && existingParameter.get().size != 0) {
+        if (existingParameter.isPresent && existingParameter.get().isNotEmpty()) {
             val parameter = existingParameter.get()
             parameter.forEach { param ->
-                if (param.abbreviation.equals(networkParam.abbreviation)) {
+                if (param.abbreviation == networkParam.abbreviation) {
                     param.value = networkParam.value
                     networkParameterRepository.save(param)
                 }
@@ -116,12 +132,17 @@ open class NetworkService : INetworkService {
 
     }
 
+    /***
+     * Deploy network to kube cluster
+     */
     override fun deploy(network: Network, user: User): Network {
         val deployedNetwork = kubernetesService.deployNetwork(network, user)
-        val savedNetwork = networkRepository.save(deployedNetwork)
-        return savedNetwork
+        return networkRepository.save(deployedNetwork)
     }
 
+    /***
+     * return network Pod logs
+     */
     override fun getNetworkLogs(network: Network, user: User): String {
         val logs = kubernetesService.getPodLogs(network, user)
         val encodedData = Base64.getEncoder().encode(logs.toByteArray())
@@ -129,14 +150,20 @@ open class NetworkService : INetworkService {
         return "{\"value\":\"$encdoded\"}"
     }
 
+
+    /***
+     * Check if network attrs are valid
+     */
     private fun validateAndSetUpNetwork(network: Network, user: User): Network {
         network.name = createNetworkName(network)
         network.user = user
 
+        // create secret and JWT token
         val key = createKeySecret()
-        network.apiKeySecret = Base64.getEncoder().encodeToString(key.getEncoded())
+        network.apiKeySecret = Base64.getEncoder().encodeToString(key.encoded)
         network.apiKey = createApiKey(user, network, key)
 
+        // set Docker image id based on type
         val type = networkTypeRepository.findById(network.type.id)
         if (type.isPresent) {
             network.type = type.get()
@@ -146,13 +173,19 @@ open class NetworkService : INetworkService {
             throw ControllerException("ER001 - unsupported network type")
         }
 
+
+        // set connection uri for calls
         network.connectionUri = createConnectionUri(network, user)
         network.status = NetworkStatus.CREATED.code
         logger.info("network setted")
         return network
     }
 
+    /***
+     * Create and check network name
+     */
     private fun createNetworkName(network: Network): String {
+        // name should not have contain _ (name is used in url of network)
         val regex = "._".toRegex()
         if (regex.containsMatchIn(network.name)) {
             throw ControllerException("ER009")
@@ -177,6 +210,9 @@ open class NetworkService : INetworkService {
                 .compact()
     }
 
+    /***
+     * create url for network
+     */
     private fun createConnectionUri(network: Network, user: User): String {
         return "${user.login}-${network.name}"
     }

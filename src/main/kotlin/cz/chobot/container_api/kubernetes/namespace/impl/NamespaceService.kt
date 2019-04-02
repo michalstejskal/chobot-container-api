@@ -17,19 +17,23 @@ class NamespaceService : INamespaceService {
 
     override fun getAllNamespaces(api: CoreV1Api): V1NamespaceList? {
         return api.listNamespace(true, null, null, null, null, null, null, null, null)
-
     }
 
+    /***
+     * Check if namespace exists and if yes return it, otherwice create new
+     */
     override fun getOrCreateNamespace(api: CoreV1Api, name: String): V1Namespace {
 
+        // get existing namespace
         val existingNamespace = getExistingNamespace(api, name)
         if (existingNamespace != null) {
-            logger.info("Namespace {} found in kubernetes cluster", name)
+            logger.info("Namespace $name found in kubernetes cluster")
             return existingNamespace
         }
 
+        // namespace not found -- create new one
         try {
-            logger.info("Creating new namespace {}.", name)
+            logger.info("Creating new namespace $name.")
             val metadata = V1ObjectMeta()
             metadata.name = name
 
@@ -40,18 +44,19 @@ class NamespaceService : INamespaceService {
             logger.info("Namespace {} created.", name)
             return namespace
         } catch (exception: ApiException) {
-            logger.info("Error occurred while creating namespace {}. Error is: {}", name, exception.responseBody)
+            logger.info("Error occurred while creating namespace $name. Error is: ${exception.responseBody}")
         }
-
         return V1Namespace()
     }
 
-
+    /***
+     * Check if kubernetes cluster has namespace with 'name' if yes -- return it
+     */
     private fun getExistingNamespace(api: CoreV1Api, name: String): V1Namespace? {
         try {
             return api.readNamespace(name, "true", true, false)
         } catch (exception: ApiException) {
-            logger.error("Namespce {} not found", name)
+            logger.error("Namespce $name not found")
         }
 
         return null

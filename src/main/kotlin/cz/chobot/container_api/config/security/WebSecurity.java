@@ -15,32 +15,31 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 
+/***
+ * Config for spring security, register filters and allowed methods
+ */
 @EnableWebSecurity
 public class WebSecurity extends WebSecurityConfigurerAdapter {
     private UserDetailService userDetailService;
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public static final String SECRET = "SecretKeyToGenJWTsSecretKeyToGenJWTs";
-    public static final long EXPIRATION_TIME = 864_000_000; // 10 days
-    public static final String TOKEN_PREFIX = "Bearer ";
-    public static final String HEADER_STRING = "Authorization";
-    public static final String SIGN_UP_URL = "/login";
+    private static final String SIGN_UP_URL = "/login";
 
     public WebSecurity(UserDetailService userDetailService) {
         this.userDetailService = userDetailService;
-//        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
+    /***
+     * Register filters, disable csrf and session management
+     */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable().authorizeRequests()
                 .antMatchers(HttpMethod.POST, SIGN_UP_URL).permitAll()
-//                .antMatchers("/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .addFilter(new JWTAuthenticationFilter(authenticationManager()))
                 .addFilter(new JWTAuthorizationFilter(authenticationManager()))
-                // this disables session creation on Spring Security
+                // disable session creation on Spring Security
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 
@@ -50,6 +49,9 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
     }
 
 
+    /***
+     * CORS configuration
+     */
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();

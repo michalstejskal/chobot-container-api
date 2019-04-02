@@ -46,23 +46,36 @@ open class ModuleService : IModuleService {
 
     private val logger = LoggerFactory.getLogger(ModuleService::class.java)
 
+    /***
+     * Create new module and validate its data
+     */
     override fun createModule(module: Module, network: Network, user: User): Module {
-        module.status = ModuleStatus.CREATED.code;
+        module.status = ModuleStatus.CREATED.code
         return fillAndValidateModule(module, network, user, ModuleOperation.CREATE)
     }
 
+    /***
+     *  moupdatedule and validate its data
+     */
     override fun updateModule(module: Module, network: Network, user: User): Module {
-        module.status = ModuleStatus.CREATED.code;
+        module.status = ModuleStatus.CREATED.code
         return fillAndValidateModule(module, network, user, ModuleOperation.UPDATE)
     }
 
+
+    /***
+     * Deploy module to kube cluster -- new Deployment and service
+     */
     override fun deploy(module: Module, network: Network, user: User): Module {
         module.status = ModuleStatus.DEPLOYED.code
         val deployedModule = kubernetesService.deployModule(module, user)
-        val savedModule = moduleRepository.save(deployedModule)
-        return savedModule
+        // save new module status and url
+        return moduleRepository.save(deployedModule)
     }
 
+    /***
+     * get module Pod logs
+     */
     override fun getModuleLogs(module: Module, user: User): String{
         val logs =  kubernetesService.getPodLogs(module, user)
         val encodedData = Base64.getEncoder().encode(logs.toByteArray())
@@ -70,6 +83,10 @@ open class ModuleService : IModuleService {
         return "{\"value\":\"$encdoded\"}"
     }
 
+
+    /***
+     * Delete deployment and service by selector in kube cluster
+     */
     override fun undeployModule(module: Module, user: User): Module {
         kubernetesService.undeployModule(module, user)
         module.status = ModuleStatus.CREATED.code
@@ -79,10 +96,17 @@ open class ModuleService : IModuleService {
         return module
     }
 
+
+    /***
+     * Create new module version
+     */
     private fun createModuleVersion(module: Module): ModuleVersion {
         return moduleVersionRepository.save(module.actualVersion)
     }
 
+    /***
+     * set module type
+     */
     private fun setModuleType(module: Module): Int {
         return when (module.type) {
             ModuleType.LAMBDA.code -> ModuleType.LAMBDA.code
@@ -92,6 +116,9 @@ open class ModuleService : IModuleService {
         }
     }
 
+    /***
+     * Check if there is no module fot it's user with same response class -> network call only one module
+     */
     private fun checkModuleResponseClass(module: Module, network: Network) {
         network.modules.forEach { networkModule ->
             if (module.responseClass == networkModule.responseClass && module.id != networkModule.id) {
@@ -101,30 +128,39 @@ open class ModuleService : IModuleService {
 
     }
 
+    /***
+     * Check module data if valid
+     */
     @Transactional
     open fun fillAndValidateModule(module: Module, network: Network, user: User, operation: ModuleOperation): Module {
+        // name should not have contain _ (name is used in url of module)
         val regex = "._".toRegex()
         if (regex.containsMatchIn(module.name)) {
             throw ControllerException("ER009")
         }
 
-
+        // convert to lower case
         module.name = module.name.toLowerCase()
         checkModuleResponseClass(module, network)
+
+        // set port for module flask api
         module.connectionPort = 5000
         module.type = setModuleType(module)
         module.network = network
 
+
+        // crate secret and JWT token
         val key = createKeySecret()
-        module.apiKeySecret = Base64.getEncoder().encodeToString(key.getEncoded())
+        module.apiKeySecret = Base64.getEncoder().encodeToString(key.encoded)
         module.apiKey = createApiKey(user, module, key)
 
 
+        // save module as actual version
         val savedModule = moduleRepository.save(module)
         savedModule.actualVersion.module = savedModule
         savedModule.actualVersion = createModuleVersion(savedModule)
 
-
+        // when saved -> call image_builder to crate new module Docker image
         when (savedModule.type) {
             ModuleType.LAMBDA.code -> createDockerImage(savedModule, network, user, operation)
             ModuleType.REPOSITORY.code -> createDockerImage(savedModule, network, user, operation)
@@ -150,12 +186,15 @@ open class ModuleService : IModuleService {
                 .compact()
     }
 
+    /***
+     * call image_builder to crate new module Docker image
+     */
     private fun createDockerImage(module: Module, network: Network, user: User, operation: ModuleOperation) {
         val callResourceUrl = when (operation) {
-            ModuleOperation.CREATE -> "${imageBuildUri}/network/${network.id}/user/${user.id}/module/${module.id}"
-            ModuleOperation.UPDATE -> "${imageBuildUri}/network/${network.id}/user/${user.id}/module/${module.id}"
-            ModuleOperation.RESTORE -> "${imageBuildUri}/network/${network.id}/user/${user.id}/module/${module.id}/restore"
-            ModuleOperation.DELETE -> "${imageBuildUri}/network/${network.id}/user/${user.id}/module/${module.id}/restore"
+            ModuleOperation.CREATE -> "$imageBuildUri/network/${network.id}/user/${user.id}/module/${module.id}"
+            ModuleOperation.UPDATE -> "$imageBuildUri/network/${network.id}/user/${user.id}/module/${module.id}"
+            ModuleOperation.RESTORE -> "$imageBuildUri/network/${network.id}/user/${user.id}/module/${module.id}/restore"
+            ModuleOperation.DELETE -> "$imageBuildUri/network/${network.id}/user/${user.id}/module/${module.id}/restore"
         }
 
         val restTemplate = RestTemplate()

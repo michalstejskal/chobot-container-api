@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletResponse
 import java.io.IOException
 
 /***
- * Enable cors headers
+ * Enable cors headers in incoming requests
  */
 @Component
 class CORSFilter : Filter {
@@ -17,13 +17,11 @@ class CORSFilter : Filter {
 
         val request = req as HttpServletRequest
         val response = res as HttpServletResponse
-
         response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"))
         response.setHeader("Access-Control-Allow-Credentials", "true")
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
         response.setHeader("Access-Control-Max-Age", "3600")
         response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With, remember-me")
-
         chain.doFilter(request, response)
     }
 

@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import javax.persistence.*
 import javax.validation.constraints.NotNull
 import javax.validation.constraints.Size
-import java.awt.print.Book
-
-
 
 
 @Entity
@@ -43,29 +40,24 @@ data class User(
         @Column(name = "email")
         val email: String,
 
-//        @NotNull
-//        @Size(max = 256)
-//        @Column(name = "secret")
-//        val secret: String,
-
         @JsonIgnore
         @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = [CascadeType.ALL])
         val networks: MutableSet<Network>
-){
-        override fun hashCode(): Int {
-                return id.hashCode()
-        }
+) {
+    override fun hashCode(): Int {
+        return id.hashCode()
+    }
 
-        override fun equals(other: Any?): Boolean {
-                if (this === other) return true
-                if (other == null || javaClass != other.javaClass) return false
-                val that = other as User?
-                return id == that?.id && login == that?.login
-        }
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val that = other as User?
+        return id == that?.id && login == that.login
+    }
 
-        override fun toString(): String {
-                return "$id - $login"
-        }
+    override fun toString(): String {
+        return "$id - $login"
+    }
 }
 
 

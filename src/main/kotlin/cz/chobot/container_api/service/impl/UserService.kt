@@ -15,7 +15,9 @@ class UserService : IUserService {
     @Autowired
     private lateinit var userRepository: UserRepository
 
-
+    /***
+     * find user by his id's
+     */
     override fun findUser(idUser: Long): Optional<User> {
         val userOpt = userRepository.findById(idUser)
         if (userOpt.isPresent) {
@@ -25,10 +27,14 @@ class UserService : IUserService {
         return userOpt
     }
 
+    /***
+     * create new user
+     */
     override fun createUser(user: User): User {
         user.login = user.login.toLowerCase()
         val bCryptPasswordEncoder = BCryptPasswordEncoder()
         user.password = bCryptPasswordEncoder.encode(user.password)
+        // username is used in his network/module urls
         val regex = "._".toRegex()
         if (regex.containsMatchIn(user.login)) {
             throw ControllerException("ER009")
@@ -38,6 +44,9 @@ class UserService : IUserService {
         return userRepository.save(user)
     }
 
+    /***
+     * update user data
+     */
     override fun updateUser(user: User): User {
         return userRepository.save(user)
     }

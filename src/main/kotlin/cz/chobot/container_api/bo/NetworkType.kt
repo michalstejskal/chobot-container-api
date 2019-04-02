@@ -27,19 +27,19 @@ data class NetworkType(
 
         @Column(name = "classes", length = 10240)
         val classes: String
-){
-        override fun hashCode(): Int {
-                return id.hashCode()
-        }
+) {
+    override fun hashCode(): Int {
+        return id.hashCode()
+    }
 
-        override fun equals(other: Any?): Boolean {
-                if (this === other) return true
-                if (other == null || javaClass != other.javaClass) return false
-                val that = other as NetworkType?
-                return id == that?.id && name == that?.name
-        }
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val that = other as NetworkType?
+        return id == that?.id && name == that.name
+    }
 
-        override fun toString(): String {
-                return "$id - $name"
-        }
+    override fun toString(): String {
+        return "$id - $name"
+    }
 }

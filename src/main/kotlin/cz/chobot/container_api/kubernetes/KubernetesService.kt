@@ -35,31 +35,42 @@ class KubernetesService : IKubernetesService {
     @Value("\${ambasador.service.url.internal}")
     private val ambasadorServiceUrlInternal: String? = null
 
+    /***
+     * Wrapper for getPodsLogs for module
+     */
     override fun getPodLogs(module: Module, user: User): String {
         val label = "${user.login}-${module.name}-${module.actualVersion.name}"
         return getPodLogs(label)
     }
 
+    /***
+     * Wrapper for getPodsLogs for Network
+     */
     override fun getPodLogs(network: Network, user: User): String {
         val label = "${user.login}-${network.name}"
         return getPodLogs(label)
     }
 
+    /***
+     * Create new deployments and service for network
+     */
     override fun deployNetwork(network: Network, user: User): Network {
         val api = getKubernetesApi()
         val namespace = namespaceService.getOrCreateNamespace(api, "default")
-        val service = service.createService(api, namespace, user, network)
+        service.createService(api, namespace, user, network)
         val deploymentName = deploymentService.createDeploymentForService(ExtensionsV1beta1Api(), namespace, user, network)
         network.connectionUri = "$ambasadorServiceUrl/$deploymentName/"
         network.status = 4
         return network
     }
 
-
+    /***
+     * Create new deployments and service for module
+     */
     override fun deployModule(module: Module, user: User): Module {
         val api = getKubernetesApi()
         val namespace = namespaceService.getOrCreateNamespace(api, "default")
-        val service = service.createService(api, namespace, user, module)
+        service.createService(api, namespace, user, module)
         val deploymentName = deploymentService.createDeploymentForService(ExtensionsV1beta1Api(), namespace, user, module)
         module.connectionUri = "$ambasadorServiceUrl/$deploymentName/"
         module.connectionUriInternal = "$ambasadorServiceUrlInternal/$deploymentName/"
@@ -67,6 +78,9 @@ class KubernetesService : IKubernetesService {
     }
 
 
+    /***
+     * Delete deployments and service for netowrk
+     */
     override fun undeployNetwork(network: Network, user: User) {
         val api = getKubernetesApi()
         val namespace = namespaceService.getOrCreateNamespace(api, "default")
@@ -76,6 +90,9 @@ class KubernetesService : IKubernetesService {
         logger.info("Deployment for ${user.login}-${network.name} deleted")
     }
 
+    /***
+     * Delete deployments and service for module
+     */
     override fun undeployModule(module: Module, user: User) {
         val api = getKubernetesApi()
         val namespace = namespaceService.getOrCreateNamespace(api, "default")
@@ -85,6 +102,9 @@ class KubernetesService : IKubernetesService {
         logger.info("Deployment for ${user.login}-${module.name}-${module.actualVersion.name} deleted")
     }
 
+    /***
+     * Return Kube api for creating service and namespaces
+     */
     private fun getKubernetesApi(): CoreV1Api {
         val client = Config.defaultClient()
         Configuration.setDefaultApiClient(client)
@@ -92,8 +112,11 @@ class KubernetesService : IKubernetesService {
         return api
     }
 
-    //    return only some logs
-//    all in elastic search
+    // return only some logs
+    // all in elastic search
+    /***
+     * Get Pod logs by its selector
+     */
     private fun getPodLogs(label: String): String {
         val api = getKubernetesApi()
         val namespace = namespaceService.getOrCreateNamespace(api, "default")
@@ -101,13 +124,13 @@ class KubernetesService : IKubernetesService {
             val pods = api.listPodForAllNamespaces(null, null, false, "app=$label", 10, "true", null, 10, false)
             if (pods != null && pods.items != null && !pods.items.isEmpty()) {
 
-                val pod = api.readNamespacedPod(pods.items[0].metadata.name, namespace.metadata.name, "true", false, false)
+                api.readNamespacedPod(pods.items[0].metadata.name, namespace.metadata.name, "true", false, false)
                 val logs = api.readNamespacedPodLog(pods.items[0].metadata.name, namespace.metadata.name, null, null, null, null, null, null, 50, true)
                 return logs
-
             }
 
         } catch (e: Exception) {
+            // pod does not logged or it's not existing pod
             logger.error(e.localizedMessage)
             e.printStackTrace()
         }

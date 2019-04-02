@@ -1,18 +1,13 @@
 package cz.chobot.container_api.config.security
 
-import com.google.common.collect.ImmutableList
-
-
+/***
+ * Util class which holds configs for security
+ */
 open class SecurityUtil {
     companion object {
-        val SECRET = "SecretKeyToGenJWTsSecretKeyToGenJWTs"
-        val EXPIRATION_TIME: Long = 864000000 // 10 days
-        val TOKEN_PREFIX = "Bearer "
-        val HEADER_STRING = "Authorization"
-        val SIGN_UP_URL = "/login"
-
-        val ALLOWED_METHODS = ImmutableList.of("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-        val EXPOSE_HEADERS = ImmutableList.of("X-Auth-Token", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials",
-                "Access-Control-Allow-Methods", "Access-Control-Max-Age", "Access-Control-Allow-Headers")
+        const val SECRET = "SecretKeyToGenJWTsSecretKeyToGenJWTs"
+        const val TOKEN_PREFIX = "Bearer "
+        const val HEADER_STRING = "Authorization"
+        const val SIGN_UP_URL = "/login"
     }
 }

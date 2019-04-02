@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 import javax.validation.Valid
 
 @RestController
@@ -37,7 +36,7 @@ class ModuleController {
             val network = networkRepository.findByIdAndUserId(idNetwork, idUser)
             if (network.isPresent) {
                 val modules = moduleRepository.findAllByNetworkId(network.get().id)
-                return ResponseEntity<Set<Module>>(modules, null, HttpStatus.OK)
+                return ResponseEntity(modules, null, HttpStatus.OK)
             }
         }
         return ResponseEntity.notFound().build()
@@ -51,7 +50,7 @@ class ModuleController {
         val network = networkRepository.findById(idNetwork)
 
         if (module.isPresent && user.isPresent && network.isPresent) {
-            return ResponseEntity<Module>(module.get(), null, HttpStatus.OK)
+            return ResponseEntity(module.get(), null, HttpStatus.OK)
         }
 
         return ResponseEntity.notFound().build()
@@ -65,7 +64,7 @@ class ModuleController {
         val network = networkRepository.findById(idNetwork)
 
         if (module.isPresent && user.isPresent && network.isPresent) {
-            val logs = moduleService.getModuleLogs(module.get(),user.get())
+            val logs = moduleService.getModuleLogs(module.get(), user.get())
             return ResponseEntity(logs, null, HttpStatus.OK)
         }
         return ResponseEntity.notFound().build()
@@ -85,7 +84,7 @@ class ModuleController {
     }
 
     @PutMapping("/{idModule}")
-    fun update(@PathVariable("idUser") idUser: Long, @PathVariable("idNetwork") idNetwork: Long, @Valid @RequestBody module: Module): ResponseEntity<Void> {
+    fun update(@PathVariable("idUser") idUser: Long, @PathVariable("idModule") idNetwork: Long, @Valid @RequestBody module: Module): ResponseEntity<Void> {
         val user = userRepository.findById(idUser)
         val existingModule = moduleRepository.findById(module.id)
         val network = networkRepository.findById(idNetwork)
@@ -118,7 +117,7 @@ class ModuleController {
         val network = networkRepository.findById(idNetwork)
 
         if (module.isPresent && user.isPresent && network.isPresent) {
-            val updatedModule = moduleService.undeployModule(module.get(),user.get())
+            val updatedModule = moduleService.undeployModule(module.get(), user.get())
             return ResponseEntity(updatedModule, null, HttpStatus.OK)
         }
         return ResponseEntity.notFound().build()

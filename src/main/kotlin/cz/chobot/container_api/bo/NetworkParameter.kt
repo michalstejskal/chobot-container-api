@@ -23,7 +23,6 @@ data class NetworkParameter(
 
         @JsonIgnore
         @ManyToOne(fetch = FetchType.LAZY)
-//        @ManyToOne(cascade = [CascadeType.REFRESH], fetch = FetchType.LAZY)
         @JoinColumn(name = "network_id")
         var network: Network? = null,
 

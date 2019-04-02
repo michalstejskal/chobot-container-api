@@ -76,13 +76,12 @@ Module(
 
         @JsonIgnore
         @ManyToOne()
-//        @ManyToOne(cascade = [CascadeType.REFRESH])
         @JoinColumn(name = "network_id")
         var network: Network,
 
         @Column(name = "api_key_secret")
         var apiKeySecret: String
-        ) {
+) {
     override fun hashCode(): Int {
         return id.hashCode()
     }
@@ -91,7 +90,7 @@ Module(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         val that = other as Module?
-        return id == that?.id && name == that?.name
+        return id == that?.id && name == that.name
     }
 
     override fun toString(): String {

@@ -1,7 +1,6 @@
 package cz.chobot.container_api.bo
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import org.springframework.data.jpa.domain.AbstractPersistable_.id
 import javax.persistence.*
 import javax.validation.constraints.NotNull
 import javax.validation.constraints.Size
@@ -68,7 +67,6 @@ data class Network(
 
         @JsonIgnore
         @ManyToOne(fetch = FetchType.LAZY)
-//        @ManyToOne(cascade = [CascadeType.REFRESH], fetch = FetchType.LAZY)
         @JoinColumn(name = "user_id")
         var user: User
 ) {
@@ -80,7 +78,7 @@ data class Network(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         val that = other as Network?
-        return id == that?.id && name == that?.name
+        return id == that?.id && name == that.name
     }
 
     override fun toString(): String {
