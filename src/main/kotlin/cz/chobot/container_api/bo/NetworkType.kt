@@ -20,7 +20,13 @@ data class NetworkType(
         @JsonIgnore
         @NotNull
         @Column(name = "image_id", nullable = false)
-        val imageId: String
+        val imageId: String,
+
+        @Column(name = "description", length = 1024)
+        val description: String,
+
+        @Column(name = "classes", length = 10240)
+        val classes: String
 ){
         override fun hashCode(): Int {
                 return id.hashCode()

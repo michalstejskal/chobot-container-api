@@ -74,13 +74,15 @@ Module(
         @Column(name = "docker_container_id")
         var containerId: String,
 
-
         @JsonIgnore
         @ManyToOne()
 //        @ManyToOne(cascade = [CascadeType.REFRESH])
         @JoinColumn(name = "network_id")
-        var network: Network
-) {
+        var network: Network,
+
+        @Column(name = "api_key_secret")
+        var apiKeySecret: String
+        ) {
     override fun hashCode(): Int {
         return id.hashCode()
     }

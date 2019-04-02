@@ -34,7 +34,7 @@ class DeploymentServiceImpl : IDeploymentService {
         }
 
         newDeployment.metadata = createDeploymentMetadata(deploymentName)
-        newDeployment.spec = createDeploymentSpec(deploymentName, network.type.imageId, 5000, network.id.toString(), train_data_path)
+        newDeployment.spec = createDeploymentSpec(deploymentName, network.type.imageId, 5000, network.id.toString(), train_data_path, network.apiKeySecret)
 
         try {
             val deployment = api.createNamespacedDeployment(namespace.metadata.name, newDeployment, true, "true", "true")
@@ -73,7 +73,7 @@ class DeploymentServiceImpl : IDeploymentService {
         var train_data_path = ""
 
         newDeployment.metadata = createDeploymentMetadata(deploymentName)
-        newDeployment.spec = createDeploymentSpec(deploymentName, module.imageId, module.connectionPort, module.id.toString(), train_data_path)
+        newDeployment.spec = createDeploymentSpec(deploymentName, module.imageId, module.connectionPort, module.id.toString(), train_data_path, module.apiKeySecret)
 
         try {
             val deployment = api.createNamespacedDeployment(namespace.metadata.name, newDeployment, true, "true", "true")
@@ -94,17 +94,17 @@ class DeploymentServiceImpl : IDeploymentService {
         return meta
     }
 
-    private fun createDeploymentSpec(deploymentName: String, imageId: String, connectionPort: Int, networkId: String, train_data_path: String): ExtensionsV1beta1DeploymentSpec {
+    private fun createDeploymentSpec(deploymentName: String, imageId: String, connectionPort: Int, networkId: String, train_data_path: String, secret: String): ExtensionsV1beta1DeploymentSpec {
         val spec = ExtensionsV1beta1DeploymentSpec()
         spec.replicas = 1
         spec.strategy = ExtensionsV1beta1DeploymentStrategy()
         spec.strategy.type = "RollingUpdate"
-        spec.template = createDeploymentTemplate(deploymentName, imageId, connectionPort, networkId, train_data_path)
+        spec.template = createDeploymentTemplate(deploymentName, imageId, connectionPort, networkId, train_data_path, secret)
 
         return spec
     }
 
-    private fun createDeploymentTemplate(deploymentName: String, imageId: String, connectionPort: Int, networkId: String, train_data_path: String): V1PodTemplateSpec {
+    private fun createDeploymentTemplate(deploymentName: String, imageId: String, connectionPort: Int, networkId: String, train_data_path: String, secret: String): V1PodTemplateSpec {
         val template = V1PodTemplateSpec()
         template.metadata = V1ObjectMeta()
         template.metadata.labels = HashMap()
@@ -113,7 +113,7 @@ class DeploymentServiceImpl : IDeploymentService {
 
 
         template.spec = V1PodSpec()
-        template.spec.containers = createTemplateContainers(deploymentName, imageId, connectionPort, networkId, train_data_path)
+        template.spec.containers = createTemplateContainers(deploymentName, imageId, connectionPort, networkId, train_data_path, secret)
 
         if (train_data_path.isNotEmpty()) {
             val hostPathVolume = V1HostPathVolumeSource()
@@ -130,7 +130,7 @@ class DeploymentServiceImpl : IDeploymentService {
 
 
     //    vemu sit a udelam deploy nad ni a i nad modulama
-    private fun createTemplateContainers(deploymentName: String, imageId: String, connectionPort: Int, networkId: String, train_data_path: String): List<V1Container> {
+    private fun createTemplateContainers(deploymentName: String, imageId: String, connectionPort: Int, networkId: String, train_data_path: String, secret: String): List<V1Container> {
         val container = V1Container()
         container.name = deploymentName
         container.image = imageId
@@ -157,7 +157,12 @@ class DeploymentServiceImpl : IDeploymentService {
         uriEnv.name = "API_URI"
         uriEnv.value = "/${deploymentName}/"
 
-        container.env = Arrays.asList(environmentEnv, networkIdEnv, uriEnv)
+
+        val secrtetEnv = V1EnvVar()
+        secrtetEnv.name = "API_SECRET"
+        secrtetEnv.value = secret
+
+        container.env = Arrays.asList(environmentEnv, networkIdEnv, uriEnv, secrtetEnv)
 
 
         if (train_data_path.isNotEmpty()) {

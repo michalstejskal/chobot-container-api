@@ -13,6 +13,9 @@ import cz.chobot.container_api.kubernetes.KubernetesService
 import cz.chobot.container_api.repository.ModuleRepository
 import cz.chobot.container_api.repository.ModuleVersionRepository
 import cz.chobot.container_api.service.IModuleService
+import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.SignatureAlgorithm
+import io.jsonwebtoken.security.Keys
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -23,6 +26,7 @@ import org.springframework.web.client.RestTemplate
 import javax.transaction.Transactional
 import java.net.URI
 import java.util.*
+import javax.crypto.SecretKey
 
 @Service
 open class ModuleService : IModuleService {
@@ -69,7 +73,6 @@ open class ModuleService : IModuleService {
     override fun undeployModule(module: Module, user: User): Module {
         kubernetesService.undeployModule(module, user)
         module.status = ModuleStatus.CREATED.code
-        module.apiKey = Strings.EMPTY
         module.connectionUri = Strings.EMPTY
         moduleRepository.save(module)
         logger.info("Network state updated ${user.login}-${module.name}")
@@ -112,6 +115,11 @@ open class ModuleService : IModuleService {
         module.type = setModuleType(module)
         module.network = network
 
+        val key = createKeySecret()
+        module.apiKeySecret = Base64.getEncoder().encodeToString(key.getEncoded())
+        module.apiKey = createApiKey(user, module, key)
+
+
         val savedModule = moduleRepository.save(module)
         savedModule.actualVersion.module = savedModule
         savedModule.actualVersion = createModuleVersion(savedModule)
@@ -127,16 +135,19 @@ open class ModuleService : IModuleService {
         return savedModule
     }
 
+    private fun createKeySecret(): SecretKey {
+        return Keys.secretKeyFor(SignatureAlgorithm.HS256)
+    }
 
-    private fun createApiKey(): String{
-        val chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        var apiKey = ""
-        for (i in 0..31) {
-            apiKey += chars[Math.floor(Math.random() * chars.length).toInt()]
-        }
+    private fun createApiKey(user: User, module: Module, key: SecretKey): String {
 
-        val encodedData = Base64.getEncoder().encode(apiKey.toByteArray())
-        return encodedData.toString()
+        return Jwts.builder()
+                .setSubject("${user.login}-${module.name}")
+                .claim("scope", "run")
+                .claim("name", module.name)
+                .setIssuedAt(Date())
+                .signWith(key)
+                .compact()
     }
 
     private fun createDockerImage(module: Module, network: Network, user: User, operation: ModuleOperation) {

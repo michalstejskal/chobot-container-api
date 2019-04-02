@@ -23,6 +23,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <kotlin.version>1.2.51</kotlin.version>
+        <!--<start-class>cz.chobot.container_api.ContainerApiApplicationKt</start-class>-->
     </properties>
 
     <dependencies>
@@ -142,74 +143,97 @@
 
     </dependencies>
 
-
     <build>
-        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
-        <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
         <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>cz.chobot.container_api.ContainerApiApplication</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        <!--cz.chobot.container_api.ContainerApiApplicationKt-->
+        <finalName>container_api</finalName>
+    </build>
+
+
+
+
+    <!--<build>-->
+        <!--<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>-->
+        <!--<testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>-->
+        <!--<plugins>-->
+
+            <!--&lt;!&ndash;<plugin>&ndash;&gt;-->
+                <!--&lt;!&ndash;<groupId>com.github.spotbugs</groupId>&ndash;&gt;-->
+                <!--&lt;!&ndash;<artifactId>spotbugs-maven-plugin</artifactId>&ndash;&gt;-->
+                <!--&lt;!&ndash;<version>3.1.11</version>&ndash;&gt;-->
+                <!--&lt;!&ndash;<dependencies>&ndash;&gt;-->
+                    <!--&lt;!&ndash;&lt;!&ndash; overwrite dependency on spotbugs if you want to specify the version of spotbugs &ndash;&gt;&ndash;&gt;-->
+                    <!--&lt;!&ndash;<dependency>&ndash;&gt;-->
+                        <!--&lt;!&ndash;<groupId>com.github.spotbugs</groupId>&ndash;&gt;-->
+                        <!--&lt;!&ndash;<artifactId>spotbugs</artifactId>&ndash;&gt;-->
+                        <!--&lt;!&ndash;<version>3.1.12</version>&ndash;&gt;-->
+                    <!--&lt;!&ndash;</dependency>&ndash;&gt;-->
+                <!--&lt;!&ndash;</dependencies>&ndash;&gt;-->
+            <!--&lt;!&ndash;</plugin>&ndash;&gt;-->
+
 
             <!--<plugin>-->
-                <!--<groupId>com.github.spotbugs</groupId>-->
-                <!--<artifactId>spotbugs-maven-plugin</artifactId>-->
-                <!--<version>3.1.11</version>-->
+                <!--<groupId>org.springframework.boot</groupId>-->
+                <!--<artifactId>spring-boot-maven-plugin</artifactId>-->
+            <!--</plugin>-->
+            <!--<plugin>-->
+                <!--<artifactId>kotlin-maven-plugin</artifactId>-->
+                <!--<groupId>org.jetbrains.kotlin</groupId>-->
+                <!--<configuration>-->
+                    <!--<args>-->
+                        <!--<arg>-Xjsr305=strict</arg>-->
+                    <!--</args>-->
+                    <!--<compilerPlugins>-->
+                        <!--<plugin>spring</plugin>-->
+                    <!--</compilerPlugins>-->
+                <!--</configuration>-->
                 <!--<dependencies>-->
-                    <!--&lt;!&ndash; overwrite dependency on spotbugs if you want to specify the version of spotbugs &ndash;&gt;-->
                     <!--<dependency>-->
-                        <!--<groupId>com.github.spotbugs</groupId>-->
-                        <!--<artifactId>spotbugs</artifactId>-->
-                        <!--<version>3.1.12</version>-->
+                        <!--<groupId>org.jetbrains.kotlin</groupId>-->
+                        <!--<artifactId>kotlin-maven-allopen</artifactId>-->
+                        <!--<version>${kotlin.version}</version>-->
                     <!--</dependency>-->
                 <!--</dependencies>-->
             <!--</plugin>-->
 
+            <!--&lt;!&ndash;kotlin auto default constructor for jpa&ndash;&gt;-->
+            <!--<plugin>-->
+                <!--<artifactId>kotlin-maven-plugin</artifactId>-->
+                <!--<groupId>org.jetbrains.kotlin</groupId>-->
+                <!--<version>${kotlin.version}</version>-->
 
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>kotlin-maven-plugin</artifactId>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <configuration>
-                    <args>
-                        <arg>-Xjsr305=strict</arg>
-                    </args>
-                    <compilerPlugins>
-                        <plugin>spring</plugin>
-                    </compilerPlugins>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.jetbrains.kotlin</groupId>
-                        <artifactId>kotlin-maven-allopen</artifactId>
-                        <version>${kotlin.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
+                <!--<configuration>-->
+                    <!--<compilerPlugins>-->
+                        <!--<plugin>jpa</plugin>-->
+                    <!--</compilerPlugins>-->
+                <!--</configuration>-->
 
-            <!--kotlin auto default constructor for jpa-->
-            <plugin>
-                <artifactId>kotlin-maven-plugin</artifactId>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <version>${kotlin.version}</version>
+                <!--<dependencies>-->
+                    <!--<dependency>-->
+                        <!--<groupId>org.jetbrains.kotlin</groupId>-->
+                        <!--<artifactId>kotlin-maven-noarg</artifactId>-->
+                        <!--<version>${kotlin.version}</version>-->
+                    <!--</dependency>-->
+                <!--</dependencies>-->
+            <!--</plugin>-->
 
-                <configuration>
-                    <compilerPlugins>
-                        <plugin>jpa</plugin>
-                    </compilerPlugins>
-                </configuration>
-
-                <dependencies>
-                    <dependency>
-                        <groupId>org.jetbrains.kotlin</groupId>
-                        <artifactId>kotlin-maven-noarg</artifactId>
-                        <version>${kotlin.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-
-        </plugins>
-    </build>
+        <!--</plugins>-->
+    <!--</build>-->
 
 
 </project>
