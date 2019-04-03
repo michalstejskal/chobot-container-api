@@ -35,9 +35,10 @@ class UserService : IUserService {
         val bCryptPasswordEncoder = BCryptPasswordEncoder()
         user.password = bCryptPasswordEncoder.encode(user.password)
         // username is used in his network/module urls
+
         val regex = "._".toRegex()
-        if (regex.containsMatchIn(user.login)) {
-            throw ControllerException("ER009")
+        if (regex.containsMatchIn(user.login) || user.login.isEmpty()) {
+            throw ControllerException("ER009 BAD USERNAME")
         }
 
 

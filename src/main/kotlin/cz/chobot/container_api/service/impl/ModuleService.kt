@@ -136,7 +136,7 @@ open class ModuleService : IModuleService {
         // name should not have contain _ (name is used in url of module)
         val regex = "._".toRegex()
         if (regex.containsMatchIn(module.name)) {
-            throw ControllerException("ER009")
+            throw ControllerException("ER009 - BAD MODULE NAME")
         }
 
         // convert to lower case

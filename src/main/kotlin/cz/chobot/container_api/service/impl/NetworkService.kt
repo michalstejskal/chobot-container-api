@@ -187,8 +187,8 @@ open class NetworkService : INetworkService {
     private fun createNetworkName(network: Network): String {
         // name should not have contain _ (name is used in url of network)
         val regex = "._".toRegex()
-        if (regex.containsMatchIn(network.name)) {
-            throw ControllerException("ER009")
+        if (regex.containsMatchIn(network.name) || network.name.isEmpty()) {
+            throw ControllerException("ER009 BAD NETWORK NAME")
         }
 
         return network.name.toLowerCase()
