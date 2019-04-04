@@ -1,4 +1,4 @@
-package cz.chobot.container_api
+package cz.chobot.container_api.kubernetes
 
 import cz.chobot.container_api.kubernetes.namespace.INamespaceService
 import io.kubernetes.client.Configuration

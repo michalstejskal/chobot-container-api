@@ -101,7 +101,7 @@ open class ModuleService : IModuleService {
      * Create new module version
      */
     private fun createModuleVersion(module: Module): ModuleVersion {
-        return moduleVersionRepository.save(module.actualVersion)
+        return moduleVersionRepository.save(module.actualVersion)!!
     }
 
     /***
@@ -135,7 +135,7 @@ open class ModuleService : IModuleService {
     open fun fillAndValidateModule(module: Module, network: Network, user: User, operation: ModuleOperation): Module {
         // name should not have contain _ (name is used in url of module)
         val regex = "._".toRegex()
-        if (regex.containsMatchIn(module.name)) {
+        if (regex.containsMatchIn(module.name) || module.name.isEmpty()) {
             throw ControllerException("ER009 - BAD MODULE NAME")
         }
 
@@ -157,7 +157,7 @@ open class ModuleService : IModuleService {
 
         // save module as actual version
         val savedModule = moduleRepository.save(module)
-        savedModule.actualVersion.module = savedModule
+        savedModule.actualVersion?.module = savedModule
         savedModule.actualVersion = createModuleVersion(savedModule)
 
         // when saved -> call image_builder to crate new module Docker image
