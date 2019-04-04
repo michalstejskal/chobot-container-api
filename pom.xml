@@ -145,6 +145,11 @@
             <version>1.4.194</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-maven-plugin</artifactId>
+            <version>3.1.11</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -232,7 +237,25 @@
                     <finalName>container_api</finalName>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.7.1</version>
+            </plugin>
         </plugins>
     </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>3.1.11</version>
+                <configuration>
+                    <onlyAnalyze>cz.chobot.container_api.config.*,cz.chobot.container_api.controller.*,cz.chobot.container_api.enum.*,cz.chobot.container_apiexception.*,cz.chobot.container_api.kubernetes.*,cz.chobot.container_api.repository.*,cz.chobot.container_api.service.*</onlyAnalyze>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
 
 </project>

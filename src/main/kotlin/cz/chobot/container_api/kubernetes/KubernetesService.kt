@@ -131,8 +131,8 @@ class KubernetesService : IKubernetesService {
 
         } catch (e: Exception) {
             // pod does not logged or it's not existing pod
-            logger.error(e.localizedMessage)
-            e.printStackTrace()
+            logger.error("GET LOGS return: ${e.localizedMessage}")
+            //e.printStackTrace()
         }
 
         return ""

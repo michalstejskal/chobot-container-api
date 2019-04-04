@@ -81,9 +81,10 @@ class NetworkController {
         if (user.isPresent) {
             val network = networkRepository.findByIdAndUserId(idNetwork, idUser)
             if (network.isPresent) {
-                network.get().connectionUri
+                val connectionUri = network.get().connectionUri
+                logger.info("Got connection $connectionUri for network $idNetwork")
             }
-            logger.info("network not found$idNetwork")
+            logger.info("network not found $idNetwork")
             return ResponseEntity.notFound().build()
         }
         logger.info("user not found $idUser")
