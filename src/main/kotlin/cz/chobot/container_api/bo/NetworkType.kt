@@ -26,7 +26,10 @@ data class NetworkType(
         val description: String,
 
         @Column(name = "classes", length = 10240)
-        val classes: String
+        val classes: String,
+
+        @Column(name = "train_type")
+        val trainType: Long
 ) {
     override fun hashCode(): Int {
         return id.hashCode()

@@ -30,11 +30,13 @@ class ServiceImpl : Iservice {
         newService.metadata = createServiceMetadata(serviceName)
         newService.spec = createServiceSpec(serviceName, 80, "http-" + serviceName, "http-api")
         try {
-            val service = api.createNamespacedService(namespace.metadata.name, newService, true, "true", "true")
+            val service = api.createNamespacedService(namespace.metadata.name, newService, true, "true", "All")
+            logger.info(service.toString())
             logger.info("Service ${newService.metadata.name} created")
             return service
         } catch (exception: ApiException) {
             logger.info("Error occurred while creating service ${serviceName}. Error is: ${exception.message}")
+            logger.error(exception.responseBody)
             logger.error(exception.responseBody)
         } catch (exception: Exception) {
             logger.info("Error occurred while creating service ${serviceName}. Error is: ${exception.message}")
@@ -70,7 +72,7 @@ class ServiceImpl : Iservice {
      */
     override fun deleteService(api: CoreV1Api, namespace: V1Namespace, serviceName: String) {
         val body = V1DeleteOptions()
-        api.deleteNamespacedService(serviceName, namespace.metadata.name, body, "true", "true", 15, true, "true")
+        api.deleteNamespacedService(serviceName, namespace.metadata.name, "true", body, "true",  15, true, "true")
     }
 
     /***

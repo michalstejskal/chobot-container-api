@@ -45,7 +45,7 @@ class KubeServiceTest {
         api = CoreV1Api()
 
         user = User(0L, "user", "", "", "", "", mutableSetOf())
-        network = Network(0L, NetworkType(0L, "some-network-type", "", "", ""), "network", "", "", "", 1, "", "", "", "", mutableSetOf(), mutableSetOf(), user);
+        network = Network(0L, NetworkType(0L, "some-network-type", "", "", "", 0), "network", "", "", "", 1, "", "", "", "", mutableSetOf(), mutableSetOf(), user);
         namespace = namespaceService.getOrCreateNamespace(api, "default")
     }
 

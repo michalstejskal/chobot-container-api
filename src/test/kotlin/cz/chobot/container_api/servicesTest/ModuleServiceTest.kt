@@ -71,13 +71,13 @@ class ModuleServiceTest {
     fun createUserAndNetwork() {
         user = User(0L, "testUser", "", "testFirstName", "testLastName", "testUser@test.com", mutableSetOf())
         user = userService.createUser(user)
-        networkType = NetworkType(0L, "some-network-type", "", "", "")
+        networkType = NetworkType(0L, "some-network-type", "", "", "", 0)
         networkType = networkTyRepository.save(networkType)
         network = Network(0L, networkType, "network", "", "", "", 1, "", "", "", "", mutableSetOf(), mutableSetOf(), user);
         network = networkService.createNetwork(network, user)
         moduleVersion = ModuleVersion(0L, "v1","", module)
-//        moduleVersion = moduleVersionRepository.save(moduleVersion)
         module = Module(0L, 1, "", "", "", mutableSetOf(), moduleVersion,1, "", "", "", "", 0, "", "", "", network, "")
+        moduleVersion.module = module
 
     }
 
@@ -96,15 +96,7 @@ class ModuleServiceTest {
         moduleService.createModule(module, network, user)
     }
 
-    @Test
-    fun createModuleTest() {
-        Mockito.`when`(restTemplate?.exchange(URI(""), ModuleOperation.CREATE.operation, null, Void::class.java))
-                .thenReturn(ResponseEntity( HttpStatus.ACCEPTED))
 
-        module.name = "some-module"
-        module = moduleService.createModule(module, network, user)
-        assert(module.name == "some-module")
-    }
 
 
 }

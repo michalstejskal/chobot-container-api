@@ -36,7 +36,8 @@ class DeploymentServiceImpl : IDeploymentService {
         newDeployment.spec = createDeploymentSpec(deploymentName, network.type.imageId, 5000, network.id.toString(), trainDataPath, network.apiKeySecret)
 
         try {
-            api.createNamespacedDeployment(namespace.metadata.name, newDeployment, true, "true", "true")
+            val createNamespacedDeployment = api.createNamespacedDeployment(namespace.metadata.name, newDeployment, true, "true", "All")
+            logger.info(createNamespacedDeployment.toString())
             logger.info("Deployment {} created.", newDeployment.metadata.name)
             return deploymentName
         } catch (exception: ApiException) {
@@ -82,7 +83,7 @@ class DeploymentServiceImpl : IDeploymentService {
         try {
             val options = V1DeleteOptions()
             options.propagationPolicy = "Foreground"
-            api.deleteNamespacedDeployment(deploymentName, namespace.metadata.name, options, "true", "true", 10, true, "Foreground")
+            api.deleteNamespacedDeployment(deploymentName, namespace.metadata.name, "true", options, "true", 10, true, "Foreground")
         } catch (e: Exception) {
             logger.warn("catch IllegalStateException, bug in kubernetes, continue..")
         }
@@ -192,9 +193,9 @@ class DeploymentServiceImpl : IDeploymentService {
         val resource = V1ResourceRequirements()
         resource.limits = HashMap()
         resource.limits["cpu"] = Quantity("0.1")
-        resource.limits["memory"] = Quantity("1Gi")
+        resource.limits["memory"] = Quantity("2Gi")
         resource.requests = HashMap()
-        resource.requests["memory"] = Quantity("1Gi")
+        resource.requests["memory"] = Quantity("2Gi")
         container.resources = resource
         return Arrays.asList(container)
     }

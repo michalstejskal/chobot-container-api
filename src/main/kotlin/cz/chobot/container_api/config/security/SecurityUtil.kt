@@ -8,6 +8,6 @@ open class SecurityUtil {
         const val SECRET = "SecretKeyToGenJWTsSecretKeyToGenJWTs"
         const val TOKEN_PREFIX = "Bearer "
         const val HEADER_STRING = "Authorization"
-        const val SIGN_UP_URL = "/login"
+        const val SIGN_UP_URL = "/api/v1/login"
     }
 }

@@ -49,7 +49,7 @@ class FileServiceTest {
     @Before
     fun createUserAndNetwork() {
         user = User(0L, "","","","","", mutableSetOf())
-        network = Network(0L, NetworkType(0L, "some-network-type", "", "", ""), "", "", "", "", 1, "", "", "", "", mutableSetOf(), mutableSetOf(), user);
+        network = Network(0L, NetworkType(0L, "some-network-type", "", "", "", 0), "", "", "", "", 1, "", "", "", "", mutableSetOf(), mutableSetOf(), user);
     }
 
     @Test

@@ -54,7 +54,7 @@ class NetworkServiceTest {
     fun createUserAndNetwork() {
         user = User(0L, "testUser", "", "testFirstName", "testLastName", "testUser@test.com", mutableSetOf())
         user = userService.createUser(user)
-        networkType = NetworkType(0L, "some-network-type", "", "", "")
+        networkType = NetworkType(0L, "some-network-type", "", "", "",0)
         network = Network(0L, networkType, "network", "", "", "", 1, "", "", "", "", mutableSetOf(), mutableSetOf(), user);
     }
 

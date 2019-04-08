@@ -6,14 +6,19 @@ import cz.chobot.container_api.bo.User
 import cz.chobot.container_api.kubernetes.deployment.IDeploymentService
 import cz.chobot.container_api.kubernetes.namespace.INamespaceService
 import cz.chobot.container_api.kubernetes.service.impl.ServiceImpl
+import io.kubernetes.client.ApiException
 import io.kubernetes.client.Configuration
 import io.kubernetes.client.apis.CoreV1Api
 import io.kubernetes.client.apis.ExtensionsV1beta1Api
 import io.kubernetes.client.util.Config
+import io.kubernetes.client.util.KubeConfig
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.io.File
+import java.io.FileReader
+import java.io.Reader
 
 
 @Service
@@ -34,6 +39,9 @@ class KubernetesService : IKubernetesService {
 
     @Value("\${ambasador.service.url.internal}")
     private val ambasadorServiceUrlInternal: String? = null
+
+    @Value("\${kube.config.file}")
+    private val kubeConfigPath: String? = null
 
     /***
      * Wrapper for getPodsLogs for module
@@ -106,7 +114,12 @@ class KubernetesService : IKubernetesService {
      * Return Kube api for creating service and namespaces
      */
     private fun getKubernetesApi(): CoreV1Api {
-        val client = Config.defaultClient()
+        //val client = Config.defaultClient()
+        val client = Config.fromConfig(kubeConfigPath)
+//        val client = Config.fromUrl("https://3456dce1-c309-4db0-b2fe-e0f49bac5031.k8s.ondigitalocean.com", false)
+//        val reader = FileReader(File(kubeConfigPath))
+//        val kubeConfig = KubeConfig.loadKubeConfig(reader)
+//        val client = Config.fromConfig(kubeConfig)
         Configuration.setDefaultApiClient(client)
         val api = CoreV1Api()
         return api
