@@ -40,8 +40,13 @@ class KubernetesService : IKubernetesService {
     @Value("\${ambasador.service.url.internal}")
     private val ambasadorServiceUrlInternal: String? = null
 
-    @Value("\${kube.config.file}")
-    private val kubeConfigPath: String? = null
+    @Value("\${host.url}")
+    private val hostUrl: String? = null
+
+    @Value("\${kube.token}")
+    private val kubeToken: String? = null
+
+
 
     /***
      * Wrapper for getPodsLogs for module
@@ -114,12 +119,8 @@ class KubernetesService : IKubernetesService {
      * Return Kube api for creating service and namespaces
      */
     private fun getKubernetesApi(): CoreV1Api {
-        //val client = Config.defaultClient()
-        val client = Config.fromConfig(kubeConfigPath)
-//        val client = Config.fromUrl("https://3456dce1-c309-4db0-b2fe-e0f49bac5031.k8s.ondigitalocean.com", false)
-//        val reader = FileReader(File(kubeConfigPath))
-//        val kubeConfig = KubeConfig.loadKubeConfig(reader)
-//        val client = Config.fromConfig(kubeConfig)
+        logger.info("connecting to cluster ${hostUrl}")
+        val client = Config.fromToken(hostUrl, kubeToken, false)
         Configuration.setDefaultApiClient(client)
         val api = CoreV1Api()
         return api

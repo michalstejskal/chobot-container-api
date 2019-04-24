@@ -11,4 +11,4 @@ ENV PATH $PATH:$M2_HOME/bin
 
 WORKDIR /chobot-containerAPI
 COPY target/container_api.jar /container_api.jar
-ENTRYPOINT ["java","-jar"," -Dspring.profiles.active=development","/container_api.jar"]
+ENTRYPOINT ["java","-jar","-Dspring.profiles.active=docker","/container_api.jar"]
